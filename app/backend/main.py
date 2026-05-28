@@ -25,9 +25,9 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Import API routers
-from app.api import health, courses
+from app.api import health, courses, topics
 # TODO (Week 6): Uncomment as you implement these routers
-# from app.api import topics, questions, resources, search, analytics
+# from app.api import questions, resources, search, analytics
 
 # Import database initialization
 from app.db.database import init_db
@@ -106,9 +106,9 @@ async def shutdown_event():
 
 app.include_router(health.router)
 app.include_router(courses.router)
+app.include_router(topics.router)
 
 # TODO (Week 6): Register additional routers as you implement them
-# app.include_router(topics.router)
 # app.include_router(questions.router)
 # app.include_router(resources.router)
 # app.include_router(search.router)
