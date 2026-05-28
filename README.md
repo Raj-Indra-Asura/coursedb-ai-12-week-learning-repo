@@ -403,6 +403,7 @@ By the end of this 12-week journey, I will be able to:
 - [PROJECT_SPEC.md](PROJECT_SPEC.md) - Technical specification
 - [LEARNING_LOG.md](LEARNING_LOG.md) - My weekly journal
 - [AI_USAGE_RULES.md](AI_USAGE_RULES.md) - AI-assisted learning guidelines
+- [SECURITY.md](SECURITY.md) - Security best practices and vulnerability tracking
 - [docs/git_workflow/](docs/git_workflow/) - Git workflow and commit standards
 
 ---
