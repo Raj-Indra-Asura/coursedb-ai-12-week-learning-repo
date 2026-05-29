@@ -46,6 +46,21 @@ class SearchTypeEnum(str, Enum):
     hybrid = "hybrid"
 
 
+class WeekStatusEnum(str, Enum):
+    not_started = "not_started"
+    in_progress = "in_progress"
+    completed = "completed"
+
+
+class LearningResourceTypeEnum(str, Enum):
+    documentation = "documentation"
+    exercise = "exercise"
+    solution = "solution"
+    notebook = "notebook"
+    code = "code"
+    reflection = "reflection"
+
+
 # ==========================================
 # Course Schemas
 # ==========================================
@@ -275,6 +290,76 @@ class ErrorResponse(BaseModel):
 class DeleteResponse(BaseModel):
     message: str
     deleted_id: int
+
+
+# ==========================================
+# Learning Navigation Schemas
+# ==========================================
+
+class LearningWeekBase(BaseModel):
+    week_number: int = Field(..., ge=1, le=12, description="Week number (1-12)")
+    title: str = Field(..., max_length=200, description="Week title")
+    description: Optional[str] = Field(None, description="Week description")
+    directory_path: str = Field(..., max_length=500, description="Path to week directory")
+    status: WeekStatusEnum = Field(WeekStatusEnum.not_started, description="Week completion status")
+
+
+class LearningWeekCreate(LearningWeekBase):
+    pass
+
+
+class LearningWeekUpdate(BaseModel):
+    title: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = None
+    status: Optional[WeekStatusEnum] = None
+
+
+class LearningResourceBase(BaseModel):
+    title: str = Field(..., max_length=200, description="Resource title")
+    file_path: str = Field(..., max_length=500, description="Path to resource file")
+    resource_type: LearningResourceTypeEnum = Field(..., description="Type of learning resource")
+    description: Optional[str] = Field(None, description="Resource description")
+    order_index: int = Field(0, description="Order within week")
+
+
+class LearningResourceCreate(LearningResourceBase):
+    week_id: int = Field(..., description="Foreign key to learning week")
+
+
+class LearningResourceResponse(LearningResourceBase):
+    resource_id: int
+    week_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LearningWeekResponse(LearningWeekBase):
+    week_id: int
+    created_at: datetime
+    updated_at: datetime
+    resources: List[LearningResourceResponse] = Field(default_factory=list, description="Resources in this week")
+
+    class Config:
+        from_attributes = True
+
+
+class NavigationResponse(BaseModel):
+    current_week: LearningWeekResponse
+    previous_week: Optional[LearningWeekResponse] = None
+    next_week: Optional[LearningWeekResponse] = None
+    total_weeks: int = 12
+    progress_percentage: float = Field(..., ge=0, le=100, description="Overall curriculum progress")
+
+
+class CurriculumOverviewResponse(BaseModel):
+    weeks: List[LearningWeekResponse]
+    total_weeks: int
+    completed_weeks: int
+    in_progress_weeks: int
+    not_started_weeks: int
+    overall_progress: float = Field(..., ge=0, le=100)
 
 
 """

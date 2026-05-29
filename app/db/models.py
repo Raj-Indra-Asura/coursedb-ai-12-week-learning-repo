@@ -13,6 +13,8 @@ Models:
 - ChunkEmbedding (Week 10)
 - User (Week 11)
 - SearchLog (Week 11)
+- LearningWeek (Learning Navigation)
+- LearningResource (Learning Navigation)
 """
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint, Index, Float
@@ -291,6 +293,85 @@ class SearchLog(Base):
 
     def __repr__(self):
         return f"<SearchLog(query='{self.query_text[:30]}...', type='{self.search_type}')>"
+
+
+# ==========================================
+# Learning Navigation Models
+# ==========================================
+
+class LearningWeek(Base):
+    """
+    Stores metadata about each week of the 12-week learning curriculum
+
+    Learning Objectives:
+    - Track learning progression across 12 weeks
+    - Enable unified navigation across curriculum
+    - Link week metadata to directory structure
+
+    Use cases:
+    - Progressive navigation (prev/next week)
+    - Learning path visualization
+    - Curriculum overview
+    - Progress tracking
+    """
+    __tablename__ = "learning_weeks"
+
+    week_id = Column(Integer, primary_key=True, autoincrement=True)
+    week_number = Column(Integer, unique=True, nullable=False, index=True,
+                        CheckConstraint('week_number >= 1 AND week_number <= 12'))
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    directory_path = Column(String(500), nullable=False)
+    status = Column(String(20), CheckConstraint("status IN ('not_started', 'in_progress', 'completed')"),
+                   default='not_started')
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    resources = relationship("LearningResource", back_populates="week", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<LearningWeek(week={self.week_number}, title='{self.title}')>"
+
+
+class LearningResource(Base):
+    """
+    Stores individual learning resources within each week
+
+    Learning Objectives:
+    - Index all learning materials (docs, exercises, notebooks, solutions)
+    - Enable unified search across curriculum
+    - Track resource types and purposes
+
+    Resource Types:
+    - documentation: README, theory notes, implementation plans
+    - exercise: Practice problems, checkpoints
+    - solution: Solutions to exercises
+    - notebook: Jupyter notebooks for interactive learning
+    - code: Example code, mini projects
+    - reflection: Weekly reflections and learnings
+    """
+    __tablename__ = "learning_resources"
+
+    resource_id = Column(Integer, primary_key=True, autoincrement=True)
+    week_id = Column(Integer, ForeignKey('learning_weeks.week_id', ondelete='CASCADE'), nullable=False)
+    title = Column(String(200), nullable=False, index=True)
+    file_path = Column(String(500), nullable=False)
+    resource_type = Column(String(50), nullable=False,
+                          CheckConstraint("resource_type IN ('documentation', 'exercise', 'solution', 'notebook', 'code', 'reflection')"))
+    description = Column(Text)
+    order_index = Column(Integer, default=0)  # Order within week
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    week = relationship("LearningWeek", back_populates="resources")
+
+    __table_args__ = (
+        Index('idx_learning_resource_week_order', 'week_id', 'order_index'),
+    )
+
+    def __repr__(self):
+        return f"<LearningResource(title='{self.title}', type='{self.resource_type}')>"
 
 
 # ==========================================
