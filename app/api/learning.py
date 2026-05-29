@@ -19,17 +19,16 @@ Learning Objectives:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.db.database import get_db
-from app.services.learning_navigation_service import LearningNavigationService
 from app.schemas import (
-    LearningWeekResponse,
-    LearningResourceResponse,
-    NavigationResponse,
     CurriculumOverviewResponse,
+    LearningResourceResponse,
+    LearningWeekResponse,
     LearningWeekUpdate,
+    NavigationResponse,
 )
+from app.services.learning_navigation_service import LearningNavigationService
 
 router = APIRouter(prefix="/learning", tags=["Learning Navigation"])
 
@@ -55,15 +54,12 @@ def get_curriculum_overview(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch curriculum overview: {str(e)}"
+            detail=f"Failed to fetch curriculum overview: {str(e)}",
         )
 
 
 @router.get("/weeks/{week_number}", response_model=NavigationResponse)
-def get_week_navigation(
-    week_number: int,
-    db: Session = Depends(get_db)
-):
+def get_week_navigation(week_number: int, db: Session = Depends(get_db)):
     """
     Get navigation context for a specific week
 
@@ -81,25 +77,21 @@ def get_week_navigation(
     """
     if week_number < 1 or week_number > 12:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Week number must be between 1 and 12"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Week number must be between 1 and 12"
         )
 
     navigation = nav_service.get_navigation(db, week_number)
     if not navigation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Week {week_number} not found. Try initializing curriculum first."
+            detail=f"Week {week_number} not found. Try initializing curriculum first.",
         )
 
     return navigation
 
 
 @router.get("/weeks/{week_number}/details", response_model=LearningWeekResponse)
-def get_week_details(
-    week_number: int,
-    db: Session = Depends(get_db)
-):
+def get_week_details(week_number: int, db: Session = Depends(get_db)):
     """
     Get detailed information about a specific week
 
@@ -114,15 +106,13 @@ def get_week_details(
     """
     if week_number < 1 or week_number > 12:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Week number must be between 1 and 12"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Week number must be between 1 and 12"
         )
 
     week = nav_service.get_week_by_number(db, week_number)
     if not week:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Week {week_number} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Week {week_number} not found"
         )
 
     return LearningWeekResponse.from_orm(week)
@@ -130,9 +120,7 @@ def get_week_details(
 
 @router.put("/weeks/{week_number}/status", response_model=LearningWeekResponse)
 def update_week_status(
-    week_number: int,
-    update_data: LearningWeekUpdate,
-    db: Session = Depends(get_db)
+    week_number: int, update_data: LearningWeekUpdate, db: Session = Depends(get_db)
 ):
     """
     Update the status of a learning week
@@ -150,21 +138,18 @@ def update_week_status(
     """
     if week_number < 1 or week_number > 12:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Week number must be between 1 and 12"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Week number must be between 1 and 12"
         )
 
     if not update_data.status:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Status field is required"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Status field is required"
         )
 
     week = nav_service.update_week_status(db, week_number, update_data.status.value)
     if not week:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Week {week_number} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Week {week_number} not found"
         )
 
     return LearningWeekResponse.from_orm(week)
@@ -205,24 +190,20 @@ def initialize_curriculum(db: Session = Depends(get_db)):
                 {
                     "week_number": week.week_number,
                     "title": week.title,
-                    "resources_count": len(week.resources)
+                    "resources_count": len(week.resources),
                 }
                 for week in weeks
-            ]
+            ],
         }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to initialize curriculum: {str(e)}"
+            detail=f"Failed to initialize curriculum: {str(e)}",
         )
 
 
-@router.get("/search", response_model=List[LearningResourceResponse])
-def search_learning_resources(
-    query: str,
-    resource_type: str = None,
-    db: Session = Depends(get_db)
-):
+@router.get("/search", response_model=list[LearningResourceResponse])
+def search_learning_resources(query: str, resource_type: str = None, db: Session = Depends(get_db)):
     """
     Search for learning resources across all weeks
 
@@ -248,8 +229,8 @@ def search_learning_resources(
     # Search in title and file path
     search_pattern = f"%{query}%"
     search_query = search_query.filter(
-        (LearningResource.title.ilike(search_pattern)) |
-        (LearningResource.file_path.ilike(search_pattern))
+        (LearningResource.title.ilike(search_pattern))
+        | (LearningResource.file_path.ilike(search_pattern))
     )
 
     resources = search_query.limit(50).all()
@@ -270,27 +251,32 @@ def get_learning_stats(db: Session = Depends(get_db)):
     Example:
         GET /learning/stats
     """
-    from app.db.models import LearningWeek, LearningResource
     from sqlalchemy import func
+
+    from app.db.models import LearningResource, LearningWeek
 
     total_weeks = db.query(func.count(LearningWeek.week_id)).scalar() or 0
     total_resources = db.query(func.count(LearningResource.resource_id)).scalar() or 0
 
     # Count by resource type
-    resources_by_type = db.query(
-        LearningResource.resource_type,
-        func.count(LearningResource.resource_id).label('count')
-    ).group_by(LearningResource.resource_type).all()
+    resources_by_type = (
+        db.query(
+            LearningResource.resource_type, func.count(LearningResource.resource_id).label("count")
+        )
+        .group_by(LearningResource.resource_type)
+        .all()
+    )
 
     # Count by status
-    weeks_by_status = db.query(
-        LearningWeek.status,
-        func.count(LearningWeek.week_id).label('count')
-    ).group_by(LearningWeek.status).all()
+    weeks_by_status = (
+        db.query(LearningWeek.status, func.count(LearningWeek.week_id).label("count"))
+        .group_by(LearningWeek.status)
+        .all()
+    )
 
     return {
         "total_weeks": total_weeks,
         "total_resources": total_resources,
         "resources_by_type": {rtype: count for rtype, count in resources_by_type},
-        "weeks_by_status": {status: count for status, count in weeks_by_status}
+        "weeks_by_status": {status: count for status, count in weeks_by_status},
     }

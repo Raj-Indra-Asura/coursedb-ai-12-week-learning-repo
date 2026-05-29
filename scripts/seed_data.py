@@ -24,21 +24,18 @@ Learning Objectives:
 - Understand data validation and integrity
 """
 
-import sys
-import os
 import argparse
-from typing import List, Dict, Any
-from datetime import datetime
+import os
+import sys
+from typing import Any
 
 # Add parent directory to path to import app modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from app.db.database import SessionLocal
-from app.db.models import Course, Topic, Question, Resource, User
-
+from app.db.models import Course, Question, Resource, Topic, User
 
 # ==========================================
 # Sample Data Definitions
@@ -49,48 +46,124 @@ COURSES_DATA = [
         "course_code": "CS201",
         "course_title": "Database Systems",
         "semester": "Spring 2024",
-        "credit": 3
+        "credit": 3,
     },
     {
         "course_code": "CS301",
         "course_title": "Artificial Intelligence",
         "semester": "Spring 2024",
-        "credit": 3
+        "credit": 3,
     },
     {
         "course_code": "CS202",
         "course_title": "Web Development",
         "semester": "Fall 2023",
-        "credit": 3
-    }
+        "credit": 3,
+    },
 ]
 
 TOPICS_DATA = {
     "CS201": [
-        {"topic_name": "Database Introduction", "description": "Introduction to databases, DBMS concepts, and data models", "week_number": 1},
-        {"topic_name": "Relational Model", "description": "Relations, attributes, tuples, keys, integrity constraints", "week_number": 2},
-        {"topic_name": "SQL Basics", "description": "SELECT, WHERE, JOIN operations, basic queries", "week_number": 3},
-        {"topic_name": "Normalization", "description": "Functional dependencies, normal forms (1NF, 2NF, 3NF, BCNF)", "week_number": 4},
-        {"topic_name": "Indexing", "description": "B+ trees, hash indexes, query optimization", "week_number": 5},
-        {"topic_name": "Transactions", "description": "ACID properties, concurrency control, isolation levels", "week_number": 6},
-        {"topic_name": "Query Processing", "description": "Query optimization, execution plans, cost estimation", "week_number": 7},
-        {"topic_name": "NoSQL Databases", "description": "Document stores, key-value stores, CAP theorem", "week_number": 8},
+        {
+            "topic_name": "Database Introduction",
+            "description": "Introduction to databases, DBMS concepts, and data models",
+            "week_number": 1,
+        },
+        {
+            "topic_name": "Relational Model",
+            "description": "Relations, attributes, tuples, keys, integrity constraints",
+            "week_number": 2,
+        },
+        {
+            "topic_name": "SQL Basics",
+            "description": "SELECT, WHERE, JOIN operations, basic queries",
+            "week_number": 3,
+        },
+        {
+            "topic_name": "Normalization",
+            "description": "Functional dependencies, normal forms (1NF, 2NF, 3NF, BCNF)",
+            "week_number": 4,
+        },
+        {
+            "topic_name": "Indexing",
+            "description": "B+ trees, hash indexes, query optimization",
+            "week_number": 5,
+        },
+        {
+            "topic_name": "Transactions",
+            "description": "ACID properties, concurrency control, isolation levels",
+            "week_number": 6,
+        },
+        {
+            "topic_name": "Query Processing",
+            "description": "Query optimization, execution plans, cost estimation",
+            "week_number": 7,
+        },
+        {
+            "topic_name": "NoSQL Databases",
+            "description": "Document stores, key-value stores, CAP theorem",
+            "week_number": 8,
+        },
     ],
     "CS301": [
-        {"topic_name": "AI Introduction", "description": "History of AI, intelligent agents, problem-solving", "week_number": 1},
-        {"topic_name": "Search Algorithms", "description": "BFS, DFS, A*, heuristic search", "week_number": 2},
-        {"topic_name": "Knowledge Representation", "description": "Logic, ontologies, semantic networks", "week_number": 3},
-        {"topic_name": "Machine Learning Basics", "description": "Supervised vs unsupervised learning, regression, classification", "week_number": 4},
-        {"topic_name": "Neural Networks", "description": "Perceptrons, backpropagation, deep learning", "week_number": 5},
-        {"topic_name": "Natural Language Processing", "description": "Text processing, embeddings, transformers", "week_number": 6},
+        {
+            "topic_name": "AI Introduction",
+            "description": "History of AI, intelligent agents, problem-solving",
+            "week_number": 1,
+        },
+        {
+            "topic_name": "Search Algorithms",
+            "description": "BFS, DFS, A*, heuristic search",
+            "week_number": 2,
+        },
+        {
+            "topic_name": "Knowledge Representation",
+            "description": "Logic, ontologies, semantic networks",
+            "week_number": 3,
+        },
+        {
+            "topic_name": "Machine Learning Basics",
+            "description": "Supervised vs unsupervised learning, regression, classification",
+            "week_number": 4,
+        },
+        {
+            "topic_name": "Neural Networks",
+            "description": "Perceptrons, backpropagation, deep learning",
+            "week_number": 5,
+        },
+        {
+            "topic_name": "Natural Language Processing",
+            "description": "Text processing, embeddings, transformers",
+            "week_number": 6,
+        },
     ],
     "CS202": [
-        {"topic_name": "HTML & CSS", "description": "Web page structure, styling, responsive design", "week_number": 1},
-        {"topic_name": "JavaScript Fundamentals", "description": "Variables, functions, DOM manipulation, events", "week_number": 2},
-        {"topic_name": "Backend Development", "description": "Node.js, Express, REST APIs", "week_number": 3},
-        {"topic_name": "Databases for Web", "description": "SQL vs NoSQL, ORM, database integration", "week_number": 4},
-        {"topic_name": "Authentication", "description": "Sessions, JWT, OAuth, password hashing", "week_number": 5},
-    ]
+        {
+            "topic_name": "HTML & CSS",
+            "description": "Web page structure, styling, responsive design",
+            "week_number": 1,
+        },
+        {
+            "topic_name": "JavaScript Fundamentals",
+            "description": "Variables, functions, DOM manipulation, events",
+            "week_number": 2,
+        },
+        {
+            "topic_name": "Backend Development",
+            "description": "Node.js, Express, REST APIs",
+            "week_number": 3,
+        },
+        {
+            "topic_name": "Databases for Web",
+            "description": "SQL vs NoSQL, ORM, database integration",
+            "week_number": 4,
+        },
+        {
+            "topic_name": "Authentication",
+            "description": "Sessions, JWT, OAuth, password hashing",
+            "week_number": 5,
+        },
+    ],
 }
 
 QUESTIONS_DATA = [
@@ -104,7 +177,7 @@ QUESTIONS_DATA = [
         "difficulty": "easy",
         "marks": 5,
         "answer_text": "SELECT DISTINCT s.student_id, s.student_name FROM students s JOIN enrollments e ON s.student_id = e.student_id WHERE e.marks > 80;",
-        "answer_reference": "Lecture 3, SQL SELECT & JOIN"
+        "answer_reference": "Lecture 3, SQL SELECT & JOIN",
     },
     {
         "course_code": "CS201",
@@ -115,7 +188,7 @@ QUESTIONS_DATA = [
         "difficulty": "medium",
         "marks": 10,
         "answer_text": "A functional dependency X→Y means X uniquely determines Y. 3NF requires no transitive dependencies. The given relation is NOT in 3NF because there's a transitive dependency A→D through B and C.",
-        "answer_reference": "Lecture 4, Normalization Theory"
+        "answer_reference": "Lecture 4, Normalization Theory",
     },
     {
         "course_code": "CS201",
@@ -126,7 +199,7 @@ QUESTIONS_DATA = [
         "difficulty": "medium",
         "marks": 8,
         "answer_text": "B-tree supports range queries and maintains sorted order, ideal for range scans. Hash index provides O(1) lookup for equality searches but doesn't support range queries. Use B-tree for ordered data access, hash for exact-match lookups.",
-        "answer_reference": "Lecture 5, Index Structures"
+        "answer_reference": "Lecture 5, Index Structures",
     },
     {
         "course_code": "CS201",
@@ -137,7 +210,7 @@ QUESTIONS_DATA = [
         "difficulty": "easy",
         "marks": 8,
         "answer_text": "ACID: Atomicity (all or nothing - money transfer completes fully or not at all), Consistency (account balances remain valid), Isolation (concurrent transfers don't interfere), Durability (committed transfers persist even after system crash).",
-        "answer_reference": "Lecture 6, Transaction Management"
+        "answer_reference": "Lecture 6, Transaction Management",
     },
     {
         "course_code": "CS201",
@@ -148,9 +221,8 @@ QUESTIONS_DATA = [
         "difficulty": "hard",
         "marks": 10,
         "answer_text": "Deadlock: circular wait where transactions block each other. Starvation: transaction repeatedly postponed. DBMS detects deadlocks using wait-for graphs - cycle detection indicates deadlock. One transaction is then rolled back.",
-        "answer_reference": "Lecture 6, Concurrency Control"
+        "answer_reference": "Lecture 6, Concurrency Control",
     },
-
     # CS301 - AI Questions
     {
         "course_code": "CS301",
@@ -161,7 +233,7 @@ QUESTIONS_DATA = [
         "difficulty": "easy",
         "marks": 6,
         "answer_text": "BFS explores level by level (queue), guarantees shortest path, higher memory. DFS explores depth-first (stack), lower memory, may not find shortest path. Use BFS for shortest path, DFS for memory-constrained search.",
-        "answer_reference": "Lecture 2, Search Algorithms"
+        "answer_reference": "Lecture 2, Search Algorithms",
     },
     {
         "course_code": "CS301",
@@ -172,7 +244,7 @@ QUESTIONS_DATA = [
         "difficulty": "easy",
         "marks": 5,
         "answer_text": "Supervised learning uses labeled data (input-output pairs) for training, e.g., spam classification. Unsupervised learning finds patterns in unlabeled data, e.g., customer segmentation using clustering.",
-        "answer_reference": "Lecture 4, ML Fundamentals"
+        "answer_reference": "Lecture 4, ML Fundamentals",
     },
     {
         "course_code": "CS301",
@@ -183,9 +255,8 @@ QUESTIONS_DATA = [
         "difficulty": "hard",
         "marks": 12,
         "answer_text": "Backpropagation computes gradients of loss function w.r.t. network weights by propagating errors backward through layers using chain rule. Essential for updating weights via gradient descent to minimize loss.",
-        "answer_reference": "Lecture 5, Neural Network Training"
+        "answer_reference": "Lecture 5, Neural Network Training",
     },
-
     # CS202 - Web Development Questions
     {
         "course_code": "CS202",
@@ -196,7 +267,7 @@ QUESTIONS_DATA = [
         "difficulty": "medium",
         "marks": 6,
         "answer_text": "Event bubbling is when an event triggered on a child element propagates up to parent elements. Example: clicking a button inside a div triggers both button and div click handlers. Can be stopped with stopPropagation().",
-        "answer_reference": "Lecture 2, DOM Events"
+        "answer_reference": "Lecture 2, DOM Events",
     },
     {
         "course_code": "CS202",
@@ -207,7 +278,7 @@ QUESTIONS_DATA = [
         "difficulty": "hard",
         "marks": 10,
         "answer_text": "Session-based: server stores state, easier to revoke, requires session storage. JWT: stateless, scalable, harder to revoke, contains claims. Use sessions for traditional apps, JWT for stateless APIs and microservices.",
-        "answer_reference": "Lecture 5, Authentication Methods"
+        "answer_reference": "Lecture 5, Authentication Methods",
     },
 ]
 
@@ -221,7 +292,7 @@ RESOURCES_DATA = [
         "url": "https://example.com/db-intro.pdf",
         "description": "Comprehensive introduction to database management systems. Covers data models, database architecture, and the role of DBMS in modern applications. Includes examples of hierarchical, network, and relational models.",
         "author": "Prof. John Smith",
-        "year_published": 2023
+        "year_published": 2023,
     },
     {
         "course_code": "CS201",
@@ -231,7 +302,7 @@ RESOURCES_DATA = [
         "url": "https://example.com/sql-basics.pdf",
         "description": "Step-by-step tutorial covering SQL fundamentals including SELECT, INSERT, UPDATE, DELETE operations. Explains JOINs with visual diagrams, aggregate functions, and subqueries with practical examples.",
         "author": "Prof. John Smith",
-        "year_published": 2023
+        "year_published": 2023,
     },
     {
         "course_code": "CS201",
@@ -241,7 +312,7 @@ RESOURCES_DATA = [
         "url": "https://example.com/indexing-paper.pdf",
         "description": "Research paper analyzing various indexing structures including B+ trees, hash indexes, and bitmap indexes. Compares performance characteristics for different query patterns and discusses index selection strategies.",
         "author": "Dr. Alice Johnson",
-        "year_published": 2022
+        "year_published": 2022,
     },
     {
         "course_code": "CS201",
@@ -251,9 +322,8 @@ RESOURCES_DATA = [
         "url": "https://example.com/transactions-textbook.pdf",
         "description": "Detailed coverage of transaction management including ACID properties, concurrency control mechanisms (2PL, timestamp ordering), deadlock detection and prevention, and recovery techniques.",
         "author": "Dr. Michael Brown",
-        "year_published": 2021
+        "year_published": 2021,
     },
-
     # CS301 Resources
     {
         "course_code": "CS301",
@@ -263,7 +333,7 @@ RESOURCES_DATA = [
         "url": "https://example.com/ml-intro.pdf",
         "description": "Foundation concepts in machine learning covering supervised, unsupervised, and reinforcement learning. Explains regression, classification, clustering with mathematical foundations and Python examples.",
         "author": "Prof. Sarah Lee",
-        "year_published": 2023
+        "year_published": 2023,
     },
     {
         "course_code": "CS301",
@@ -273,9 +343,8 @@ RESOURCES_DATA = [
         "url": "https://example.com/deep-learning.pdf",
         "description": "Comprehensive guide to neural networks and deep learning. Covers perceptrons, multi-layer networks, backpropagation algorithm, convolutional networks, and recurrent networks with implementation details.",
         "author": "Prof. David Chen",
-        "year_published": 2022
+        "year_published": 2022,
     },
-
     # CS202 Resources
     {
         "course_code": "CS202",
@@ -285,7 +354,7 @@ RESOURCES_DATA = [
         "url": "https://example.com/nodejs-guide.pdf",
         "description": "Practical guide to building web applications with Node.js and Express framework. Covers routing, middleware, error handling, and RESTful API design patterns with code examples.",
         "author": "Prof. Emily Davis",
-        "year_published": 2023
+        "year_published": 2023,
     },
 ]
 
@@ -300,6 +369,7 @@ USERS_DATA = [
 # ==========================================
 # Seeding Functions
 # ==========================================
+
 
 def clear_all_data(db: Session):
     """
@@ -332,7 +402,7 @@ def clear_all_data(db: Session):
         raise
 
 
-def seed_courses(db: Session, course_data: List[Dict[str, Any]]) -> Dict[str, Course]:
+def seed_courses(db: Session, course_data: list[dict[str, Any]]) -> dict[str, Course]:
     """
     Seed courses into database
 
@@ -367,7 +437,9 @@ def seed_courses(db: Session, course_data: List[Dict[str, Any]]) -> Dict[str, Co
     return courses
 
 
-def seed_topics(db: Session, topics_data: Dict[str, List[Dict]], courses: Dict[str, Course]) -> Dict[str, List[Topic]]:
+def seed_topics(
+    db: Session, topics_data: dict[str, list[dict]], courses: dict[str, Course]
+) -> dict[str, list[Topic]]:
     """
     Seed topics into database
 
@@ -392,10 +464,7 @@ def seed_topics(db: Session, topics_data: Dict[str, List[Dict]], courses: Dict[s
         topics = []
 
         for data in topic_list:
-            topic = Topic(
-                course_id=course.course_id,
-                **data
-            )
+            topic = Topic(course_id=course.course_id, **data)
             db.add(topic)
             topics.append(topic)
 
@@ -408,7 +477,12 @@ def seed_topics(db: Session, topics_data: Dict[str, List[Dict]], courses: Dict[s
     return all_topics
 
 
-def seed_questions(db: Session, questions_data: List[Dict], courses: Dict[str, Course], topics_by_course: Dict[str, List[Topic]]):
+def seed_questions(
+    db: Session,
+    questions_data: list[dict],
+    courses: dict[str, Course],
+    topics_by_course: dict[str, list[Topic]],
+):
     """
     Seed questions into database
 
@@ -442,8 +516,8 @@ def seed_questions(db: Session, questions_data: List[Dict], courses: Dict[str, C
             course_id=course.course_id,
             topic_id=topic.topic_id if topic else None,
             course_code=course_code,  # Intentional denormalization for Week 4 lesson
-            topic_name=topic_name,    # Intentional denormalization for Week 4 lesson
-            **data
+            topic_name=topic_name,  # Intentional denormalization for Week 4 lesson
+            **data,
         )
         db.add(question)
 
@@ -452,7 +526,12 @@ def seed_questions(db: Session, questions_data: List[Dict], courses: Dict[str, C
     db.flush()
 
 
-def seed_resources(db: Session, resources_data: List[Dict], courses: Dict[str, Course], topics_by_course: Dict[str, List[Topic]]):
+def seed_resources(
+    db: Session,
+    resources_data: list[dict],
+    courses: dict[str, Course],
+    topics_by_course: dict[str, list[Topic]],
+):
     """
     Seed resources into database
 
@@ -483,9 +562,7 @@ def seed_resources(db: Session, resources_data: List[Dict], courses: Dict[str, C
                     break
 
         resource = Resource(
-            course_id=course.course_id,
-            topic_id=topic.topic_id if topic else None,
-            **data
+            course_id=course.course_id, topic_id=topic.topic_id if topic else None, **data
         )
         db.add(resource)
 
@@ -494,7 +571,7 @@ def seed_resources(db: Session, resources_data: List[Dict], courses: Dict[str, C
     db.flush()
 
 
-def seed_users(db: Session, users_data: List[Dict]):
+def seed_users(db: Session, users_data: list[dict]):
     """
     Seed users into database
 
@@ -547,18 +624,10 @@ def print_statistics(db: Session):
 
 def main():
     """Main seeding function"""
-    parser = argparse.ArgumentParser(
-        description="Seed CourseDB-AI database with sample data"
-    )
+    parser = argparse.ArgumentParser(description="Seed CourseDB-AI database with sample data")
+    parser.add_argument("--clear", action="store_true", help="Clear existing data before seeding")
     parser.add_argument(
-        "--clear",
-        action="store_true",
-        help="Clear existing data before seeding"
-    )
-    parser.add_argument(
-        "--minimal",
-        action="store_true",
-        help="Load only minimal dataset (faster for testing)"
+        "--minimal", action="store_true", help="Load only minimal dataset (faster for testing)"
     )
 
     args = parser.parse_args()
@@ -606,6 +675,7 @@ def main():
         print(f"\n❌ Fatal error during seeding: {e}")
         db.rollback()
         import traceback
+
         traceback.print_exc()
         raise
 

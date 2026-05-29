@@ -15,15 +15,15 @@ Learning Objectives:
 """
 
 import os
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
-from typing import Generator
 
 # Read database URL from environment variable
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://coursedb_user:coursedb_password@localhost:5432/coursedb_ai"
+    "DATABASE_URL", "postgresql://coursedb_user:coursedb_password@localhost:5432/coursedb_ai"
 )
 
 # Learning Note: Connection String Format
@@ -116,6 +116,7 @@ def init_db():
     ```
     """
     from app.db.models import Base
+
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created successfully")
 
@@ -128,6 +129,7 @@ def get_db_info():
         dict: Database connection details (without password)
     """
     from sqlalchemy.engine.url import make_url
+
     url = make_url(DATABASE_URL)
     return {
         "driver": url.drivername,

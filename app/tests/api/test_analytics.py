@@ -1,6 +1,5 @@
 """Tests for the analytics API endpoints."""
 
-
 from fastapi.testclient import TestClient
 
 from app.db.models import Question

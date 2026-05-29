@@ -28,17 +28,17 @@ TODO (Week 9):
 4. Test with deadlock scenarios
 """
 
-from typing import List, Dict, Set, Optional
+from collections import defaultdict
 from dataclasses import dataclass
-from collections import defaultdict, deque
 
 
 @dataclass
 class Transaction:
     """Represents a transaction"""
+
     tx_id: str
-    holds: List[str]  # Resources this transaction holds
-    waits_for: List[str]  # Resources this transaction waits for
+    holds: list[str]  # Resources this transaction holds
+    waits_for: list[str]  # Resources this transaction waits for
 
 
 class WaitForGraph:
@@ -57,13 +57,13 @@ class WaitForGraph:
 
     def __init__(self):
         # Adjacency list: tx_id → [tx_ids that this tx waits for]
-        self.graph: Dict[str, List[str]] = defaultdict(list)
+        self.graph: dict[str, list[str]] = defaultdict(list)
         # Resource ownership: resource → tx_id that holds it
-        self.resource_owner: Dict[str, str] = {}
+        self.resource_owner: dict[str, str] = {}
         # Transactions
-        self.transactions: Dict[str, Transaction] = {}
+        self.transactions: dict[str, Transaction] = {}
 
-    def add_transaction(self, tx_id: str, holds: List[str], waits_for: List[str]):
+    def add_transaction(self, tx_id: str, holds: list[str], waits_for: list[str]):
         """
         Add transaction to wait-for graph
 
@@ -108,7 +108,7 @@ class WaitForGraph:
         visited = set()
         rec_stack = set()
 
-        def has_cycle_dfs(node: str, path: List[str]) -> bool:
+        def has_cycle_dfs(node: str, path: list[str]) -> bool:
             """DFS to detect cycle"""
             if node in rec_stack:
                 # Found cycle!
@@ -135,7 +135,7 @@ class WaitForGraph:
 
         return False
 
-    def get_deadlock_cycle(self) -> Optional[List[str]]:
+    def get_deadlock_cycle(self) -> list[str] | None:
         """
         Find and return a deadlock cycle if it exists
 
@@ -146,7 +146,7 @@ class WaitForGraph:
         visited = set()
         rec_stack = []
 
-        def find_cycle_dfs(node: str) -> Optional[List[str]]:
+        def find_cycle_dfs(node: str) -> list[str] | None:
             if node in rec_stack:
                 # Found cycle! Extract it
                 cycle_start = rec_stack.index(node)
@@ -229,7 +229,7 @@ def demo_deadlock_detection():
     graph1.add_transaction("T2", holds=["Y"], waits_for=["X"])
     graph1.visualize()
 
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     print("=== Scenario 2: No Deadlock ===")
     print()
@@ -240,7 +240,7 @@ def demo_deadlock_detection():
     graph2.add_transaction("T3", holds=[], waits_for=["X"])
     graph2.visualize()
 
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     print("=== Scenario 3: Three-Way Deadlock ===")
     print()

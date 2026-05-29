@@ -17,7 +17,6 @@ Models:
 - LearningResource (Learning Navigation)
 """
 
-
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     CheckConstraint,
@@ -40,6 +39,7 @@ Base = declarative_base()
 # Week 5: Core Models
 # ==========================================
 
+
 class Course(Base):
     """
     Stores academic course information
@@ -49,13 +49,14 @@ class Course(Base):
     - Learn relationship definitions
     - Understand constraints (UNIQUE, NOT NULL, CHECK)
     """
+
     __tablename__ = "courses"
 
     course_id = Column(Integer, primary_key=True, autoincrement=True)
     course_code = Column(String(20), unique=True, nullable=False, index=True)
     course_title = Column(String(200), nullable=False)
     semester = Column(String(20))
-    credit = Column(Integer, CheckConstraint('credit > 0'))
+    credit = Column(Integer, CheckConstraint("credit > 0"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -76,13 +77,14 @@ class Topic(Base):
     - Learn cascade operations
     - Understand back_populates for bidirectional relationships
     """
+
     __tablename__ = "topics"
 
     topic_id = Column(Integer, primary_key=True, autoincrement=True)
-    course_id = Column(Integer, ForeignKey('courses.course_id', ondelete='CASCADE'), nullable=False)
+    course_id = Column(Integer, ForeignKey("courses.course_id", ondelete="CASCADE"), nullable=False)
     topic_name = Column(String(100), nullable=False, index=True)
     description = Column(Text)
-    week_number = Column(Integer, CheckConstraint('week_number > 0'))
+    week_number = Column(Integer, CheckConstraint("week_number > 0"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -104,21 +106,26 @@ class Question(Base):
     - Indexing strategy (year, difficulty, topic_id)
     - Intentional denormalization (course_code, topic_name) for Week 4 lesson
     """
+
     __tablename__ = "questions"
 
     question_id = Column(Integer, primary_key=True, autoincrement=True)
-    course_id = Column(Integer, ForeignKey('courses.course_id', ondelete='CASCADE'), nullable=False)
-    topic_id = Column(Integer, ForeignKey('topics.topic_id', ondelete='SET NULL'), nullable=True)
+    course_id = Column(Integer, ForeignKey("courses.course_id", ondelete="CASCADE"), nullable=False)
+    topic_id = Column(Integer, ForeignKey("topics.topic_id", ondelete="SET NULL"), nullable=True)
     question_text = Column(Text, nullable=False)
 
     # Intentional redundancy for normalization lesson (Week 4)
     course_code = Column(String(20))  # REDUNDANT - should be fetched via FK
     topic_name = Column(String(100))  # REDUNDANT - should be fetched via FK
 
-    year = Column(Integer, CheckConstraint('year >= 2010 AND year <= 2030'), index=True)
-    exam_type = Column(String(50), CheckConstraint("exam_type IN ('midterm', 'final', 'quiz', 'assignment')"))
-    difficulty = Column(String(20), CheckConstraint("difficulty IN ('easy', 'medium', 'hard')"), index=True)
-    marks = Column(Integer, CheckConstraint('marks > 0'))
+    year = Column(Integer, CheckConstraint("year >= 2010 AND year <= 2030"), index=True)
+    exam_type = Column(
+        String(50), CheckConstraint("exam_type IN ('midterm', 'final', 'quiz', 'assignment')")
+    )
+    difficulty = Column(
+        String(20), CheckConstraint("difficulty IN ('easy', 'medium', 'hard')"), index=True
+    )
+    marks = Column(Integer, CheckConstraint("marks > 0"))
 
     # Answer (optional)
     answer_text = Column(Text, nullable=True)
@@ -133,12 +140,14 @@ class Question(Base):
 
     # Composite indexes for common queries
     __table_args__ = (
-        Index('idx_questions_year_difficulty', 'year', 'difficulty'),
-        Index('idx_questions_course_topic', 'course_id', 'topic_id'),
+        Index("idx_questions_year_difficulty", "year", "difficulty"),
+        Index("idx_questions_course_topic", "course_id", "topic_id"),
     )
 
     def __repr__(self):
-        return f"<Question(id={self.question_id}, year={self.year}, difficulty='{self.difficulty}')>"
+        return (
+            f"<Question(id={self.question_id}, year={self.year}, difficulty='{self.difficulty}')>"
+        )
 
 
 class Resource(Base):
@@ -150,13 +159,17 @@ class Resource(Base):
     - Learn resource type enumeration
     - Understand text chunking for AI (Week 10)
     """
+
     __tablename__ = "resources"
 
     resource_id = Column(Integer, primary_key=True, autoincrement=True)
-    course_id = Column(Integer, ForeignKey('courses.course_id', ondelete='CASCADE'), nullable=False)
-    topic_id = Column(Integer, ForeignKey('topics.topic_id', ondelete='SET NULL'), nullable=True)
+    course_id = Column(Integer, ForeignKey("courses.course_id", ondelete="CASCADE"), nullable=False)
+    topic_id = Column(Integer, ForeignKey("topics.topic_id", ondelete="SET NULL"), nullable=True)
     title = Column(String(200), nullable=False, index=True)
-    resource_type = Column(String(50), CheckConstraint("resource_type IN ('note', 'textbook', 'paper', 'video', 'slide')"))
+    resource_type = Column(
+        String(50),
+        CheckConstraint("resource_type IN ('note', 'textbook', 'paper', 'video', 'slide')"),
+    )
     file_path = Column(String(500), nullable=True)
     url = Column(String(500), nullable=True)
     description = Column(Text)
@@ -177,6 +190,7 @@ class Resource(Base):
 # Week 10: Semantic Search Models
 # ==========================================
 
+
 class ResourceChunk(Base):
     """
     Stores 200-300 word chunks of resources for semantic search
@@ -191,10 +205,13 @@ class ResourceChunk(Base):
     - Improves embedding quality (focused semantic meaning)
     - Enables precise retrieval (return relevant paragraph, not whole doc)
     """
+
     __tablename__ = "resource_chunks"
 
     chunk_id = Column(Integer, primary_key=True, autoincrement=True)
-    resource_id = Column(Integer, ForeignKey('resources.resource_id', ondelete='CASCADE'), nullable=False)
+    resource_id = Column(
+        Integer, ForeignKey("resources.resource_id", ondelete="CASCADE"), nullable=False
+    )
     chunk_index = Column(Integer, nullable=False)  # Order within document
     chunk_text = Column(Text, nullable=False)
     word_count = Column(Integer)
@@ -202,11 +219,11 @@ class ResourceChunk(Base):
 
     # Relationships
     resource = relationship("Resource", back_populates="chunks")
-    embedding = relationship("ChunkEmbedding", back_populates="chunk", uselist=False, cascade="all, delete-orphan")
-
-    __table_args__ = (
-        Index('idx_chunk_resource_index', 'resource_id', 'chunk_index'),
+    embedding = relationship(
+        "ChunkEmbedding", back_populates="chunk", uselist=False, cascade="all, delete-orphan"
     )
+
+    __table_args__ = (Index("idx_chunk_resource_index", "resource_id", "chunk_index"),)
 
     def __repr__(self):
         return f"<ResourceChunk(chunk_id={self.chunk_id}, resource_id={self.resource_id}, index={self.chunk_index})>"
@@ -231,12 +248,18 @@ class ChunkEmbedding(Base):
     - <#> : Inner product
     - <=> : Cosine distance (1 - cosine similarity)
     """
+
     __tablename__ = "chunk_embeddings"
 
     embedding_id = Column(Integer, primary_key=True, autoincrement=True)
-    chunk_id = Column(Integer, ForeignKey('resource_chunks.chunk_id', ondelete='CASCADE'), unique=True, nullable=False)
+    chunk_id = Column(
+        Integer,
+        ForeignKey("resource_chunks.chunk_id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
     embedding = Column(Vector(384))  # pgvector type for 384-dim vectors
-    model_name = Column(String(100), default='all-MiniLM-L6-v2')
+    model_name = Column(String(100), default="all-MiniLM-L6-v2")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -250,6 +273,7 @@ class ChunkEmbedding(Base):
 # Week 11: User & Analytics Models
 # ==========================================
 
+
 class User(Base):
     """
     Basic user information for authentication/tracking
@@ -259,6 +283,7 @@ class User(Base):
     - Password hashing (not implemented here - see FastAPI security)
     - Audit trail connection
     """
+
     __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -288,12 +313,15 @@ class SearchLog(Base):
     - Evaluate search quality (results_count)
     - A/B testing different search algorithms
     """
+
     __tablename__ = "search_logs"
 
     log_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True)
     query_text = Column(Text, nullable=False)
-    search_type = Column(String(20), CheckConstraint("search_type IN ('sql', 'semantic', 'hybrid')"))
+    search_type = Column(
+        String(20), CheckConstraint("search_type IN ('sql', 'semantic', 'hybrid')")
+    )
     results_count = Column(Integer)
     execution_time_ms = Column(Float)  # Query performance tracking
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
@@ -301,9 +329,7 @@ class SearchLog(Base):
     # Relationships
     user = relationship("User", back_populates="search_logs")
 
-    __table_args__ = (
-        Index('idx_search_logs_user_date', 'user_id', 'created_at'),
-    )
+    __table_args__ = (Index("idx_search_logs_user_date", "user_id", "created_at"),)
 
     def __repr__(self):
         return f"<SearchLog(query='{self.query_text[:30]}...', type='{self.search_type}')>"
@@ -312,6 +338,7 @@ class SearchLog(Base):
 # ==========================================
 # Learning Navigation Models
 # ==========================================
+
 
 class LearningWeek(Base):
     """
@@ -328,21 +355,32 @@ class LearningWeek(Base):
     - Curriculum overview
     - Progress tracking
     """
+
     __tablename__ = "learning_weeks"
 
     week_id = Column(Integer, primary_key=True, autoincrement=True)
-    week_number = Column(Integer, CheckConstraint('week_number >= 1 AND week_number <= 12'),
-                        unique=True, nullable=False, index=True)
+    week_number = Column(
+        Integer,
+        CheckConstraint("week_number >= 1 AND week_number <= 12"),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
     title = Column(String(200), nullable=False)
     description = Column(Text)
     directory_path = Column(String(500), nullable=False)
-    status = Column(String(20), CheckConstraint("status IN ('not_started', 'in_progress', 'completed')"),
-                   default='not_started')
+    status = Column(
+        String(20),
+        CheckConstraint("status IN ('not_started', 'in_progress', 'completed')"),
+        default="not_started",
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    resources = relationship("LearningResource", back_populates="week", cascade="all, delete-orphan")
+    resources = relationship(
+        "LearningResource", back_populates="week", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<LearningWeek(week={self.week_number}, title='{self.title}')>"
@@ -365,15 +403,22 @@ class LearningResource(Base):
     - code: Example code, mini projects
     - reflection: Weekly reflections and learnings
     """
+
     __tablename__ = "learning_resources"
 
     resource_id = Column(Integer, primary_key=True, autoincrement=True)
-    week_id = Column(Integer, ForeignKey('learning_weeks.week_id', ondelete='CASCADE'), nullable=False)
+    week_id = Column(
+        Integer, ForeignKey("learning_weeks.week_id", ondelete="CASCADE"), nullable=False
+    )
     title = Column(String(200), nullable=False, index=True)
     file_path = Column(String(500), nullable=False)
-    resource_type = Column(String(50),
-                          CheckConstraint("resource_type IN ('documentation', 'exercise', 'solution', 'notebook', 'code', 'reflection')"),
-                          nullable=False)
+    resource_type = Column(
+        String(50),
+        CheckConstraint(
+            "resource_type IN ('documentation', 'exercise', 'solution', 'notebook', 'code', 'reflection')"
+        ),
+        nullable=False,
+    )
     description = Column(Text)
     order_index = Column(Integer, default=0)  # Order within week
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -381,9 +426,7 @@ class LearningResource(Base):
     # Relationships
     week = relationship("LearningWeek", back_populates="resources")
 
-    __table_args__ = (
-        Index('idx_learning_resource_week_order', 'week_id', 'order_index'),
-    )
+    __table_args__ = (Index("idx_learning_resource_week_order", "week_id", "order_index"),)
 
     def __repr__(self):
         return f"<LearningResource(title='{self.title}', type='{self.resource_type}')>"

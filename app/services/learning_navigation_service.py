@@ -154,7 +154,9 @@ class LearningNavigationService:
 
                 # Fallback: get first non-empty paragraph
                 lines = [
-                    ln.strip() for ln in content.split("\n") if ln.strip() and not ln.startswith("#")
+                    ln.strip()
+                    for ln in content.split("\n")
+                    if ln.strip() and not ln.startswith("#")
                 ]
                 return lines[0] if lines else None
         except Exception:

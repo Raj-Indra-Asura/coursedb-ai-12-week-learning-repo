@@ -9,15 +9,16 @@ Learning Objectives:
 - Practice model design for APIs
 """
 
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
+from pydantic import BaseModel, EmailStr, Field
 
 # ==========================================
 # Enums for Validation
 # ==========================================
+
 
 class DifficultyEnum(str, Enum):
     easy = "easy"
@@ -65,28 +66,32 @@ class LearningResourceTypeEnum(str, Enum):
 # Course Schemas
 # ==========================================
 
+
 class CourseBase(BaseModel):
     course_code: str = Field(..., max_length=20, description="Unique course code (e.g., CS201)")
     course_title: str = Field(..., max_length=200, description="Full course title")
-    semester: Optional[str] = Field(None, max_length=20, description="Semester offered")
+    semester: str | None = Field(None, max_length=20, description="Semester offered")
     credit: int = Field(..., gt=0, description="Credit hours (must be > 0)")
 
 
 class CourseCreate(CourseBase):
     """Request schema for creating a new course"""
+
     pass
 
 
 class CourseUpdate(BaseModel):
     """Request schema for updating a course (all fields optional)"""
-    course_code: Optional[str] = Field(None, max_length=20)
-    course_title: Optional[str] = Field(None, max_length=200)
-    semester: Optional[str] = Field(None, max_length=20)
-    credit: Optional[int] = Field(None, gt=0)
+
+    course_code: str | None = Field(None, max_length=20)
+    course_title: str | None = Field(None, max_length=200)
+    semester: str | None = Field(None, max_length=20)
+    credit: int | None = Field(None, gt=0)
 
 
 class CourseResponse(CourseBase):
     """Response schema for course data"""
+
     course_id: int
     created_at: datetime
 
@@ -98,10 +103,11 @@ class CourseResponse(CourseBase):
 # Topic Schemas
 # ==========================================
 
+
 class TopicBase(BaseModel):
     course_id: int = Field(..., description="Foreign key to course")
     topic_name: str = Field(..., max_length=100, description="Topic/chapter name")
-    description: Optional[str] = Field(None, description="Detailed description")
+    description: str | None = Field(None, description="Detailed description")
     week_number: int = Field(..., gt=0, description="Week number in course")
 
 
@@ -110,9 +116,9 @@ class TopicCreate(TopicBase):
 
 
 class TopicUpdate(BaseModel):
-    topic_name: Optional[str] = Field(None, max_length=100)
-    description: Optional[str] = None
-    week_number: Optional[int] = Field(None, gt=0)
+    topic_name: str | None = Field(None, max_length=100)
+    description: str | None = None
+    week_number: int | None = Field(None, gt=0)
 
 
 class TopicResponse(TopicBase):
@@ -127,18 +133,23 @@ class TopicResponse(TopicBase):
 # Question Schemas
 # ==========================================
 
+
 class QuestionBase(BaseModel):
     course_id: int
-    topic_id: Optional[int] = None
+    topic_id: int | None = None
     question_text: str = Field(..., description="Full question text")
-    course_code: Optional[str] = Field(None, max_length=20, description="Redundant for now (Week 4 fix)")
-    topic_name: Optional[str] = Field(None, max_length=100, description="Redundant for now (Week 4 fix)")
+    course_code: str | None = Field(
+        None, max_length=20, description="Redundant for now (Week 4 fix)"
+    )
+    topic_name: str | None = Field(
+        None, max_length=100, description="Redundant for now (Week 4 fix)"
+    )
     year: int = Field(..., ge=2010, le=2030, description="Year question was asked")
     exam_type: ExamTypeEnum
     difficulty: DifficultyEnum
     marks: int = Field(..., gt=0, description="Marks allocated")
-    answer_text: Optional[str] = Field(None, description="Answer/solution")
-    answer_reference: Optional[str] = Field(None, max_length=200, description="Reference for answer")
+    answer_text: str | None = Field(None, description="Answer/solution")
+    answer_reference: str | None = Field(None, max_length=200, description="Reference for answer")
 
 
 class QuestionCreate(QuestionBase):
@@ -146,14 +157,14 @@ class QuestionCreate(QuestionBase):
 
 
 class QuestionUpdate(BaseModel):
-    question_text: Optional[str] = None
-    topic_id: Optional[int] = None
-    year: Optional[int] = Field(None, ge=2010, le=2030)
-    exam_type: Optional[ExamTypeEnum] = None
-    difficulty: Optional[DifficultyEnum] = None
-    marks: Optional[int] = Field(None, gt=0)
-    answer_text: Optional[str] = None
-    answer_reference: Optional[str] = None
+    question_text: str | None = None
+    topic_id: int | None = None
+    year: int | None = Field(None, ge=2010, le=2030)
+    exam_type: ExamTypeEnum | None = None
+    difficulty: DifficultyEnum | None = None
+    marks: int | None = Field(None, gt=0)
+    answer_text: str | None = None
+    answer_reference: str | None = None
 
 
 class QuestionResponse(QuestionBase):
@@ -169,16 +180,17 @@ class QuestionResponse(QuestionBase):
 # Resource Schemas
 # ==========================================
 
+
 class ResourceBase(BaseModel):
     course_id: int
-    topic_id: Optional[int] = None
+    topic_id: int | None = None
     title: str = Field(..., max_length=200)
     resource_type: ResourceTypeEnum
-    file_path: Optional[str] = Field(None, max_length=500)
-    url: Optional[str] = Field(None, max_length=500)
-    description: Optional[str] = None
-    author: Optional[str] = Field(None, max_length=200)
-    year_published: Optional[int] = None
+    file_path: str | None = Field(None, max_length=500)
+    url: str | None = Field(None, max_length=500)
+    description: str | None = None
+    author: str | None = Field(None, max_length=200)
+    year_published: int | None = None
 
 
 class ResourceCreate(ResourceBase):
@@ -186,13 +198,13 @@ class ResourceCreate(ResourceBase):
 
 
 class ResourceUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=200)
-    resource_type: Optional[ResourceTypeEnum] = None
-    file_path: Optional[str] = Field(None, max_length=500)
-    url: Optional[str] = Field(None, max_length=500)
-    description: Optional[str] = None
-    author: Optional[str] = Field(None, max_length=200)
-    year_published: Optional[int] = None
+    title: str | None = Field(None, max_length=200)
+    resource_type: ResourceTypeEnum | None = None
+    file_path: str | None = Field(None, max_length=500)
+    url: str | None = Field(None, max_length=500)
+    description: str | None = None
+    author: str | None = Field(None, max_length=200)
+    year_published: int | None = None
 
 
 class ResourceResponse(ResourceBase):
@@ -207,16 +219,19 @@ class ResourceResponse(ResourceBase):
 # Search Schemas
 # ==========================================
 
+
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500, description="Search query")
     search_type: SearchTypeEnum = Field(SearchTypeEnum.sql, description="Type of search")
     top_k: int = Field(10, ge=1, le=100, description="Number of results to return")
-    filters: Optional[dict] = Field(None, description="Additional filters (year, difficulty, topic_id)")
+    filters: dict | None = Field(
+        None, description="Additional filters (year, difficulty, topic_id)"
+    )
 
 
 class SearchResult(BaseModel):
-    question_id: Optional[int] = None
-    resource_id: Optional[int] = None
+    question_id: int | None = None
+    resource_id: int | None = None
     title: str
     snippet: str = Field(..., description="Text snippet showing match")
     relevance_score: float = Field(..., ge=0, le=1, description="Relevance score (0-1)")
@@ -226,7 +241,7 @@ class SearchResult(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     search_type: SearchTypeEnum
-    results: List[SearchResult]
+    results: list[SearchResult]
     total_count: int
     execution_time_ms: float
 
@@ -235,17 +250,18 @@ class SearchResponse(BaseModel):
 # Analytics Schemas
 # ==========================================
 
+
 class TopicFrequency(BaseModel):
     topic_name: str
     question_count: int
     avg_marks: float
-    years: List[int]
+    years: list[int]
 
 
 class AnalyticsResponse(BaseModel):
     total_questions: int
     total_courses: int
-    topics_by_frequency: List[TopicFrequency]
+    topics_by_frequency: list[TopicFrequency]
     questions_by_year: dict  # {year: count}
     questions_by_difficulty: dict  # {difficulty: count}
 
@@ -254,10 +270,11 @@ class AnalyticsResponse(BaseModel):
 # User Schemas (Week 11)
 # ==========================================
 
+
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    full_name: Optional[str] = Field(None, max_length=200)
+    full_name: str | None = Field(None, max_length=200)
 
 
 class UserCreate(UserBase):
@@ -276,6 +293,7 @@ class UserResponse(UserBase):
 # Generic Responses
 # ==========================================
 
+
 class HealthResponse(BaseModel):
     status: str
     database: str
@@ -284,7 +302,7 @@ class HealthResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
-    error_code: Optional[str] = None
+    error_code: str | None = None
 
 
 class DeleteResponse(BaseModel):
@@ -296,10 +314,11 @@ class DeleteResponse(BaseModel):
 # Learning Navigation Schemas
 # ==========================================
 
+
 class LearningWeekBase(BaseModel):
     week_number: int = Field(..., ge=1, le=12, description="Week number (1-12)")
     title: str = Field(..., max_length=200, description="Week title")
-    description: Optional[str] = Field(None, description="Week description")
+    description: str | None = Field(None, description="Week description")
     directory_path: str = Field(..., max_length=500, description="Path to week directory")
     status: WeekStatusEnum = Field(WeekStatusEnum.not_started, description="Week completion status")
 
@@ -309,16 +328,16 @@ class LearningWeekCreate(LearningWeekBase):
 
 
 class LearningWeekUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = None
-    status: Optional[WeekStatusEnum] = None
+    title: str | None = Field(None, max_length=200)
+    description: str | None = None
+    status: WeekStatusEnum | None = None
 
 
 class LearningResourceBase(BaseModel):
     title: str = Field(..., max_length=200, description="Resource title")
     file_path: str = Field(..., max_length=500, description="Path to resource file")
     resource_type: LearningResourceTypeEnum = Field(..., description="Type of learning resource")
-    description: Optional[str] = Field(None, description="Resource description")
+    description: str | None = Field(None, description="Resource description")
     order_index: int = Field(0, description="Order within week")
 
 
@@ -339,7 +358,9 @@ class LearningWeekResponse(LearningWeekBase):
     week_id: int
     created_at: datetime
     updated_at: datetime
-    resources: List[LearningResourceResponse] = Field(default_factory=list, description="Resources in this week")
+    resources: list[LearningResourceResponse] = Field(
+        default_factory=list, description="Resources in this week"
+    )
 
     class Config:
         from_attributes = True
@@ -347,14 +368,14 @@ class LearningWeekResponse(LearningWeekBase):
 
 class NavigationResponse(BaseModel):
     current_week: LearningWeekResponse
-    previous_week: Optional[LearningWeekResponse] = None
-    next_week: Optional[LearningWeekResponse] = None
+    previous_week: LearningWeekResponse | None = None
+    next_week: LearningWeekResponse | None = None
     total_weeks: int = 12
     progress_percentage: float = Field(..., ge=0, le=100, description="Overall curriculum progress")
 
 
 class CurriculumOverviewResponse(BaseModel):
-    weeks: List[LearningWeekResponse]
+    weeks: list[LearningWeekResponse]
     total_weeks: int
     completed_weeks: int
     in_progress_weeks: int

@@ -9,33 +9,30 @@ Learning objectives:
 - Search functionality with ILIKE
 """
 
-from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_, and_
+from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.models import Question, Course, Topic
-from app.schemas import QuestionCreate, QuestionUpdate, QuestionResponse
+from app.db.models import Course, Question, Topic
+from app.schemas import QuestionCreate, QuestionResponse, QuestionUpdate
 
-router = APIRouter(
-    prefix="/api/questions",
-    tags=["questions"]
-)
+router = APIRouter(prefix="/api/questions", tags=["questions"])
 
 
-@router.get("/", response_model=List[QuestionResponse])
+@router.get("/", response_model=list[QuestionResponse])
 async def list_questions(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Max records to return"),
-    course_id: Optional[int] = Query(None, description="Filter by course ID"),
-    topic_id: Optional[int] = Query(None, description="Filter by topic ID"),
-    year: Optional[int] = Query(None, ge=2010, le=2030, description="Filter by year"),
-    exam_type: Optional[str] = Query(None, description="Filter by exam type (midterm, final, quiz, assignment)"),
-    difficulty: Optional[str] = Query(None, description="Filter by difficulty (easy, medium, hard)"),
-    search: Optional[str] = Query(None, description="Search in question text"),
-    db: Session = Depends(get_db)
+    course_id: int | None = Query(None, description="Filter by course ID"),
+    topic_id: int | None = Query(None, description="Filter by topic ID"),
+    year: int | None = Query(None, ge=2010, le=2030, description="Filter by year"),
+    exam_type: str | None = Query(
+        None, description="Filter by exam type (midterm, final, quiz, assignment)"
+    ),
+    difficulty: str | None = Query(None, description="Filter by difficulty (easy, medium, hard)"),
+    search: str | None = Query(None, description="Search in question text"),
+    db: Session = Depends(get_db),
 ):
     """
     List all questions with extensive filtering options.
@@ -78,10 +75,7 @@ async def list_questions(
 
 
 @router.get("/{question_id}", response_model=QuestionResponse)
-async def get_question(
-    question_id: int,
-    db: Session = Depends(get_db)
-):
+async def get_question(question_id: int, db: Session = Depends(get_db)):
     """
     Get a specific question by ID.
 
@@ -102,17 +96,14 @@ async def get_question(
     if not question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Question with id {question_id} not found"
+            detail=f"Question with id {question_id} not found",
         )
 
     return question
 
 
 @router.post("/", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
-async def create_question(
-    question: QuestionCreate,
-    db: Session = Depends(get_db)
-):
+async def create_question(question: QuestionCreate, db: Session = Depends(get_db)):
     """
     Create a new question.
 
@@ -152,7 +143,7 @@ async def create_question(
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Course with id {question.course_id} does not exist"
+                detail=f"Course with id {question.course_id} does not exist",
             )
 
         # Verify topic exists (if provided)
@@ -161,7 +152,7 @@ async def create_question(
             if not topic:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Topic with id {question.topic_id} does not exist"
+                    detail=f"Topic with id {question.topic_id} does not exist",
                 )
 
         # Create new question
@@ -175,7 +166,7 @@ async def create_question(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Database constraint violation: {str(e.orig)}"
+            detail=f"Database constraint violation: {str(e.orig)}",
         )
     except HTTPException:
         raise
@@ -183,15 +174,13 @@ async def create_question(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create question: {str(e)}"
+            detail=f"Failed to create question: {str(e)}",
         )
 
 
 @router.put("/{question_id}", response_model=QuestionResponse)
 async def update_question(
-    question_id: int,
-    question: QuestionUpdate,
-    db: Session = Depends(get_db)
+    question_id: int, question: QuestionUpdate, db: Session = Depends(get_db)
 ):
     """
     Update an existing question (partial update supported).
@@ -228,7 +217,7 @@ async def update_question(
     if not db_question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Question with id {question_id} not found"
+            detail=f"Question with id {question_id} not found",
         )
 
     try:
@@ -241,7 +230,7 @@ async def update_question(
             if not course:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Course with id {update_data['course_id']} does not exist"
+                    detail=f"Course with id {update_data['course_id']} does not exist",
                 )
 
         # If updating topic_id, verify new topic exists (allow None)
@@ -250,7 +239,7 @@ async def update_question(
             if not topic:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Topic with id {update_data['topic_id']} does not exist"
+                    detail=f"Topic with id {update_data['topic_id']} does not exist",
                 )
 
         for field, value in update_data.items():
@@ -264,7 +253,7 @@ async def update_question(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Database constraint violation: {str(e.orig)}"
+            detail=f"Database constraint violation: {str(e.orig)}",
         )
     except HTTPException:
         raise
@@ -272,15 +261,12 @@ async def update_question(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update question: {str(e)}"
+            detail=f"Failed to update question: {str(e)}",
         )
 
 
 @router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_question(
-    question_id: int,
-    db: Session = Depends(get_db)
-):
+async def delete_question(question_id: int, db: Session = Depends(get_db)):
     """
     Delete a question.
 
@@ -301,7 +287,7 @@ async def delete_question(
     if not db_question:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Question with id {question_id} not found"
+            detail=f"Question with id {question_id} not found",
         )
 
     try:
@@ -313,7 +299,7 @@ async def delete_question(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete question: {str(e)}"
+            detail=f"Failed to delete question: {str(e)}",
         )
 
 
@@ -322,7 +308,7 @@ async def search_questions_by_topic_name(
     topic_name: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Search questions by topic name (case-insensitive partial match).
@@ -336,9 +322,13 @@ async def search_questions_by_topic_name(
     Example:
         GET /api/questions/search/by-topic/normalization
     """
-    questions = db.query(Question).filter(
-        Question.topic_name.ilike(f"%{topic_name}%")
-    ).offset(skip).limit(limit).all()
+    questions = (
+        db.query(Question)
+        .filter(Question.topic_name.ilike(f"%{topic_name}%"))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
     return questions
 
@@ -357,10 +347,12 @@ async def get_questions_by_year(db: Session = Depends(get_db)):
     """
     from sqlalchemy import func
 
-    results = db.query(
-        Question.year,
-        func.count(Question.question_id).label('count')
-    ).group_by(Question.year).order_by(Question.year.desc()).all()
+    results = (
+        db.query(Question.year, func.count(Question.question_id).label("count"))
+        .group_by(Question.year)
+        .order_by(Question.year.desc())
+        .all()
+    )
 
     return [{"year": year, "count": count} for year, count in results]
 
@@ -379,9 +371,10 @@ async def get_questions_by_difficulty(db: Session = Depends(get_db)):
     """
     from sqlalchemy import func
 
-    results = db.query(
-        Question.difficulty,
-        func.count(Question.question_id).label('count')
-    ).group_by(Question.difficulty).all()
+    results = (
+        db.query(Question.difficulty, func.count(Question.question_id).label("count"))
+        .group_by(Question.difficulty)
+        .all()
+    )
 
     return [{"difficulty": difficulty, "count": count} for difficulty, count in results]

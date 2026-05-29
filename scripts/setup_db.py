@@ -24,20 +24,18 @@ Learning Objectives:
 - Understand index creation strategy
 """
 
-import sys
-import os
 import argparse
-from typing import Optional
+import os
+import sys
 
 # Add parent directory to path to import app modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.exc import ProgrammingError, OperationalError
-from sqlalchemy.orm import Session
+from sqlalchemy import inspect, text
+from sqlalchemy.exc import ProgrammingError
 
-from app.db.database import DATABASE_URL, engine, SessionLocal, get_db_info
-from app.db.models import Base, Course, Topic, Question, Resource, ResourceChunk, ChunkEmbedding, User, SearchLog
+from app.db.database import DATABASE_URL, engine, get_db_info
+from app.db.models import Base
 
 
 def check_database_connection(db_engine) -> bool:
@@ -95,7 +93,9 @@ def enable_pgvector_extension(db_engine) -> bool:
                 print("  ✅ pgvector extension installed successfully")
 
             # Verify installation
-            result = conn.execute(text("SELECT extversion FROM pg_extension WHERE extname = 'vector'"))
+            result = conn.execute(
+                text("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+            )
             version = result.scalar()
 
             if version:
@@ -107,8 +107,10 @@ def enable_pgvector_extension(db_engine) -> bool:
 
     except ProgrammingError as e:
         if "permission denied" in str(e).lower():
-            print(f"  ❌ Permission denied: Need superuser access to install extensions")
-            print(f"  💡 Run: psql -U postgres -d {get_db_info()['database']} -c 'CREATE EXTENSION vector;'")
+            print("  ❌ Permission denied: Need superuser access to install extensions")
+            print(
+                f"  💡 Run: psql -U postgres -d {get_db_info()['database']} -c 'CREATE EXTENSION vector;'"
+            )
         else:
             print(f"  ❌ Error installing pgvector: {e}")
         return False
@@ -195,14 +197,12 @@ def create_additional_indexes(db_engine):
         USING ivfflat (embedding vector_cosine_ops)
         WITH (lists = 100)
         """,
-
         # Additional text search indexes
         """
         CREATE INDEX IF NOT EXISTS idx_questions_text_search
         ON questions
         USING gin(to_tsvector('english', question_text))
         """,
-
         """
         CREATE INDEX IF NOT EXISTS idx_resources_title_search
         ON resources
@@ -263,7 +263,6 @@ def create_views(db_engine):
         LEFT JOIN resources r ON c.course_id = r.course_id
         GROUP BY c.course_id, c.course_code, c.course_title, c.semester
         """,
-
         # Search analytics view
         """
         CREATE OR REPLACE VIEW search_analytics AS
@@ -276,7 +275,6 @@ def create_views(db_engine):
         FROM search_logs
         GROUP BY search_type, DATE(created_at)
         """,
-
         # Question difficulty distribution
         """
         CREATE OR REPLACE VIEW question_difficulty_stats AS
@@ -328,8 +326,16 @@ def verify_setup(db_engine):
 
         # Check tables
         tables = inspector.get_table_names()
-        expected_tables = ['courses', 'topics', 'questions', 'resources',
-                          'resource_chunks', 'chunk_embeddings', 'users', 'search_logs']
+        expected_tables = [
+            "courses",
+            "topics",
+            "questions",
+            "resources",
+            "resource_chunks",
+            "chunk_embeddings",
+            "users",
+            "search_logs",
+        ]
 
         missing_tables = set(expected_tables) - set(tables)
         if missing_tables:
@@ -354,8 +360,8 @@ def verify_setup(db_engine):
                 return False
 
         # Check chunk_embeddings table has vector column
-        columns = [col['name'] for col in inspector.get_columns('chunk_embeddings')]
-        if 'embedding' in columns:
+        columns = [col["name"] for col in inspector.get_columns("chunk_embeddings")]
+        if "embedding" in columns:
             print("  ✅ Vector embedding column exists")
         else:
             print("  ❌ Vector embedding column not found")
@@ -387,18 +393,14 @@ def print_database_info():
 
 def main():
     """Main setup function"""
-    parser = argparse.ArgumentParser(
-        description="Initialize CourseDB-AI database"
-    )
+    parser = argparse.ArgumentParser(description="Initialize CourseDB-AI database")
     parser.add_argument(
         "--drop-all",
         action="store_true",
-        help="Drop all existing tables and recreate (WARNING: destroys data)"
+        help="Drop all existing tables and recreate (WARNING: destroys data)",
     )
     parser.add_argument(
-        "--skip-pgvector",
-        action="store_true",
-        help="Skip pgvector extension installation"
+        "--skip-pgvector", action="store_true", help="Skip pgvector extension installation"
     )
 
     args = parser.parse_args()
@@ -430,8 +432,10 @@ def main():
 
         # Drop tables if requested
         if args.drop_all:
-            confirm = input("\n⚠️  Are you sure you want to drop all tables? Type 'yes' to confirm: ")
-            if confirm.lower() == 'yes':
+            confirm = input(
+                "\n⚠️  Are you sure you want to drop all tables? Type 'yes' to confirm: "
+            )
+            if confirm.lower() == "yes":
                 drop_all_tables(engine)
             else:
                 print("  ℹ️  Drop operation cancelled")
@@ -462,6 +466,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Fatal error during setup: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

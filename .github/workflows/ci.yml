@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff, black, mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install lint tools
+        run: python -m pip install --upgrade pip ruff black mypy
+
+      - name: ruff
+        run: ruff check .
+
+      - name: black --check
+        run: black --check .
+
+      - name: mypy (non-blocking)
+        run: mypy app dbms_internals || true
+
+  test:
+    name: Tests + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        # Install the test-relevant subset. Heavy ML wheels (torch,
+        # sentence-transformers) are intentionally omitted: the embedding
+        # service imports them lazily and the related tests skip when the
+        # model is not cached.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            fastapi "uvicorn[standard]" python-dotenv \
+            sqlalchemy alembic pgvector \
+            numpy networkx \
+            pydantic email-validator python-multipart \
+            httpx pytest pytest-asyncio pytest-cov
+
+      - name: Run pytest with coverage
+        env:
+          DATABASE_URL: "sqlite:///./ci_test.db"
+        run: pytest -q --cov=app --cov=dbms_internals --cov-report=term-missing
+
+  migrate:
+    name: Alembic upgrade (PostgreSQL + pgvector)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: coursedb_ai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install sqlalchemy alembic pgvector psycopg2-binary pydantic
+
+      - name: alembic upgrade head
+        env:
+          DATABASE_URL: "postgresql+psycopg2://postgres:postgres@localhost:5432/coursedb_ai"
+        run: alembic upgrade head

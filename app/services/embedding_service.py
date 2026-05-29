@@ -29,7 +29,6 @@ TODO (Week 10):
 5. Cache model in memory
 """
 
-from typing import List
 import logging
 
 import numpy as np
@@ -100,15 +99,11 @@ class EmbeddingService:
             raise ValueError("Text cannot be empty")
 
         # encode() returns normalized embeddings by default
-        embedding = self.model.encode(
-            text,
-            convert_to_numpy=True,
-            show_progress_bar=False
-        )
+        embedding = self.model.encode(text, convert_to_numpy=True, show_progress_bar=False)
 
         return embedding
 
-    def generate_embeddings_batch(self, texts: List[str]) -> np.ndarray:
+    def generate_embeddings_batch(self, texts: list[str]) -> np.ndarray:
         """
         Generate embeddings for multiple texts (faster than one-by-one)
 
@@ -139,12 +134,12 @@ class EmbeddingService:
             valid_texts,
             convert_to_numpy=True,
             show_progress_bar=len(valid_texts) > 100,  # Show progress for large batches
-            batch_size=32  # Process 32 texts at a time
+            batch_size=32,  # Process 32 texts at a time
         )
 
         return embeddings
 
-    def encode_for_search(self, query: str) -> List[float]:
+    def encode_for_search(self, query: str) -> list[float]:
         """
         Encode query for semantic search
 

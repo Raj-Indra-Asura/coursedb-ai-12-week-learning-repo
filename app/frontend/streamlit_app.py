@@ -10,16 +10,15 @@ Features:
 - DBMS Internals Demos
 """
 
-import streamlit as st
 import requests
-from typing import Optional, Dict, List
+import streamlit as st
 
 # API Configuration
 API_BASE_URL = "http://localhost:8000"
 
 
 # Helper function to make API requests
-def api_request(endpoint: str, method: str = "GET", data: Optional[Dict] = None):
+def api_request(endpoint: str, method: str = "GET", data: dict | None = None):
     """Make API request to backend"""
     url = f"{API_BASE_URL}{endpoint}"
     try:
@@ -52,7 +51,9 @@ def show_learning_navigation():
             with st.spinner("Initializing curriculum..."):
                 result = api_request("/learning/initialize", method="POST")
                 if result:
-                    st.success(f"✅ Initialized {result['total_weeks']} weeks with {result['total_resources']} resources")
+                    st.success(
+                        f"✅ Initialized {result['total_weeks']} weeks with {result['total_resources']} resources"
+                    )
 
     # Get curriculum overview
     curriculum = api_request("/learning/curriculum")
@@ -65,18 +66,18 @@ def show_learning_navigation():
     st.metric(
         "Overall Progress",
         f"{curriculum['overall_progress']:.1f}%",
-        f"{curriculum['completed_weeks']}/{curriculum['total_weeks']} weeks completed"
+        f"{curriculum['completed_weeks']}/{curriculum['total_weeks']} weeks completed",
     )
 
     # Display weeks
     st.subheader("📅 12-Week Curriculum")
 
     # Week selector
-    week_numbers = [w['week_number'] for w in curriculum['weeks']]
+    week_numbers = [w["week_number"] for w in curriculum["weeks"]]
     selected_week = st.selectbox(
         "Select Week",
         week_numbers,
-        format_func=lambda x: f"Week {x}: {next((w['title'] for w in curriculum['weeks'] if w['week_number'] == x), '')}"
+        format_func=lambda x: f"Week {x}: {next((w['title'] for w in curriculum['weeks'] if w['week_number'] == x), '')}",
     )
 
     if selected_week:
@@ -84,18 +85,16 @@ def show_learning_navigation():
 
     # Display all weeks as cards
     st.subheader("All Weeks")
-    for i in range(0, len(curriculum['weeks']), 3):
+    for i in range(0, len(curriculum["weeks"]), 3):
         cols = st.columns(3)
         for j, col in enumerate(cols):
-            if i + j < len(curriculum['weeks']):
-                week = curriculum['weeks'][i + j]
+            if i + j < len(curriculum["weeks"]):
+                week = curriculum["weeks"][i + j]
                 with col:
-                    status_emoji = {
-                        'completed': '✅',
-                        'in_progress': '🔄',
-                        'not_started': '⏸️'
-                    }
-                    st.markdown(f"### {status_emoji.get(week['status'], '📝')} Week {week['week_number']}")
+                    status_emoji = {"completed": "✅", "in_progress": "🔄", "not_started": "⏸️"}
+                    st.markdown(
+                        f"### {status_emoji.get(week['status'], '📝')} Week {week['week_number']}"
+                    )
                     st.write(f"**{week['title']}**")
                     st.caption(f"{len(week.get('resources', []))} resources")
 
@@ -108,42 +107,40 @@ def show_week_details(week_number: int):
         st.error("Failed to load week details")
         return
 
-    current_week = navigation['current_week']
+    current_week = navigation["current_week"]
 
     st.markdown("---")
     st.header(f"Week {current_week['week_number']}: {current_week['title']}")
 
     # Status badge
-    status_colors = {
-        'completed': 'green',
-        'in_progress': 'orange',
-        'not_started': 'gray'
-    }
-    status = current_week['status']
-    st.markdown(f"**Status:** :{status_colors.get(status, 'blue')}[{status.replace('_', ' ').title()}]")
+    status_colors = {"completed": "green", "in_progress": "orange", "not_started": "gray"}
+    status = current_week["status"]
+    st.markdown(
+        f"**Status:** :{status_colors.get(status, 'blue')}[{status.replace('_', ' ').title()}]"
+    )
 
     # Description
-    if current_week.get('description'):
-        st.info(current_week['description'])
+    if current_week.get("description"):
+        st.info(current_week["description"])
 
     # Navigation buttons
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col1:
-        if navigation.get('previous_week'):
+        if navigation.get("previous_week"):
             if st.button("⬅️ Previous Week"):
-                st.session_state.selected_week = navigation['previous_week']['week_number']
+                st.session_state.selected_week = navigation["previous_week"]["week_number"]
                 st.rerun()
 
     with col3:
-        if navigation.get('next_week'):
+        if navigation.get("next_week"):
             if st.button("Next Week ➡️"):
-                st.session_state.selected_week = navigation['next_week']['week_number']
+                st.session_state.selected_week = navigation["next_week"]["week_number"]
                 st.rerun()
 
     # Resources
     st.subheader("📁 Learning Resources")
-    resources = current_week.get('resources', [])
+    resources = current_week.get("resources", [])
 
     if not resources:
         st.warning("No resources found for this week")
@@ -151,19 +148,19 @@ def show_week_details(week_number: int):
         # Group resources by type
         resource_types = {}
         for resource in resources:
-            rtype = resource['resource_type']
+            rtype = resource["resource_type"]
             if rtype not in resource_types:
                 resource_types[rtype] = []
             resource_types[rtype].append(resource)
 
         # Display by type
         type_icons = {
-            'documentation': '📄',
-            'exercise': '✏️',
-            'solution': '✅',
-            'notebook': '📓',
-            'code': '💻',
-            'reflection': '🤔'
+            "documentation": "📄",
+            "exercise": "✏️",
+            "solution": "✅",
+            "notebook": "📓",
+            "code": "💻",
+            "reflection": "🤔",
         }
 
         for rtype, items in sorted(resource_types.items()):
@@ -176,15 +173,13 @@ def show_week_details(week_number: int):
     st.subheader("Update Status")
     new_status = st.selectbox(
         "Change week status",
-        ['not_started', 'in_progress', 'completed'],
-        index=['not_started', 'in_progress', 'completed'].index(current_week['status'])
+        ["not_started", "in_progress", "completed"],
+        index=["not_started", "in_progress", "completed"].index(current_week["status"]),
     )
 
     if st.button("💾 Save Status"):
         result = api_request(
-            f"/learning/weeks/{week_number}/status",
-            method="PUT",
-            data={"status": new_status}
+            f"/learning/weeks/{week_number}/status", method="PUT", data={"status": new_status}
         )
         if result:
             st.success(f"✅ Status updated to: {new_status}")
@@ -200,7 +195,7 @@ def show_search_resources():
 
     resource_type = st.selectbox(
         "Filter by type (optional)",
-        ["All", "documentation", "exercise", "solution", "notebook", "code", "reflection"]
+        ["All", "documentation", "exercise", "solution", "notebook", "code", "reflection"],
     )
 
     if st.button("Search") and query:
@@ -231,33 +226,26 @@ def show_statistics():
         col1, col2 = st.columns(2)
 
         with col1:
-            st.metric("Total Weeks", stats['total_weeks'])
-            st.metric("Total Resources", stats['total_resources'])
+            st.metric("Total Weeks", stats["total_weeks"])
+            st.metric("Total Resources", stats["total_resources"])
 
         with col2:
             st.subheader("Weeks by Status")
-            for status, count in stats.get('weeks_by_status', {}).items():
+            for status, count in stats.get("weeks_by_status", {}).items():
                 st.write(f"**{status.replace('_', ' ').title()}:** {count}")
 
         st.subheader("Resources by Type")
-        for rtype, count in stats.get('resources_by_type', {}).items():
+        for rtype, count in stats.get("resources_by_type", {}).items():
             st.write(f"**{rtype.title()}:** {count}")
 
 
 # Main app
 def main():
-    st.set_page_config(
-        page_title="CourseDB-AI Learning System",
-        page_icon="📚",
-        layout="wide"
-    )
+    st.set_page_config(page_title="CourseDB-AI Learning System", page_icon="📚", layout="wide")
 
     # Sidebar navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio(
-        "Go to",
-        ["Learning Navigation", "Search Resources", "Statistics"]
-    )
+    page = st.sidebar.radio("Go to", ["Learning Navigation", "Search Resources", "Statistics"])
 
     # Display selected page
     if page == "Learning Navigation":
@@ -270,4 +258,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

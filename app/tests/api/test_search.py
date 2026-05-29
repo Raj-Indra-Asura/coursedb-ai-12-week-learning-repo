@@ -5,7 +5,6 @@ exercised with a mocked embedding service and a mocked vector-search backend so
 the tests stay deterministic and require neither the ML stack nor pgvector.
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 

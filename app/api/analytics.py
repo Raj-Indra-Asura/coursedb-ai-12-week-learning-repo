@@ -9,18 +9,14 @@ Learning objectives:
 - Query optimization for reporting
 """
 
-from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_
 
 from app.db.database import get_db
-from app.db.models import Question, Topic, Course, Resource
+from app.db.models import Course, Question, Resource, Topic
 
-router = APIRouter(
-    prefix="/api/analytics",
-    tags=["analytics"]
-)
+router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
 @router.get("/overview")
@@ -47,23 +43,21 @@ async def get_overview_stats(db: Session = Depends(get_db)):
     total_resources = db.query(func.count(Resource.resource_id)).scalar()
 
     # Calculate average questions per topic
-    avg_questions_per_topic = (
-        total_questions / total_topics if total_topics > 0 else 0
-    )
+    avg_questions_per_topic = total_questions / total_topics if total_topics > 0 else 0
 
     return {
         "total_courses": total_courses or 0,
         "total_topics": total_topics or 0,
         "total_questions": total_questions or 0,
         "total_resources": total_resources or 0,
-        "avg_questions_per_topic": round(avg_questions_per_topic, 2)
+        "avg_questions_per_topic": round(avg_questions_per_topic, 2),
     }
 
 
 @router.get("/topic-frequency")
 async def get_topic_frequency(
     limit: int = Query(20, ge=1, le=100, description="Max topics to return"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Get question count per topic, ordered by frequency.
@@ -81,27 +75,27 @@ async def get_topic_frequency(
             {"topic_id": 12, "topic_name": "Transactions", "question_count": 24, "course_title": "DBMS"}
         ]
     """
-    results = db.query(
-        Topic.topic_id,
-        Topic.topic_name,
-        Course.course_title,
-        func.count(Question.question_id).label('question_count')
-    ).join(
-        Question, Topic.topic_id == Question.topic_id, isouter=True
-    ).join(
-        Course, Topic.course_id == Course.course_id
-    ).group_by(
-        Topic.topic_id, Topic.topic_name, Course.course_title
-    ).order_by(
-        desc('question_count')
-    ).limit(limit).all()
+    results = (
+        db.query(
+            Topic.topic_id,
+            Topic.topic_name,
+            Course.course_title,
+            func.count(Question.question_id).label("question_count"),
+        )
+        .join(Question, Topic.topic_id == Question.topic_id, isouter=True)
+        .join(Course, Topic.course_id == Course.course_id)
+        .group_by(Topic.topic_id, Topic.topic_name, Course.course_title)
+        .order_by(desc("question_count"))
+        .limit(limit)
+        .all()
+    )
 
     return [
         {
             "topic_id": topic_id,
             "topic_name": topic_name,
             "course_title": course_title,
-            "question_count": question_count
+            "question_count": question_count,
         }
         for topic_id, topic_name, course_title, question_count in results
     ]
@@ -109,9 +103,9 @@ async def get_topic_frequency(
 
 @router.get("/year-wise-trends")
 async def get_year_wise_trends(
-    start_year: Optional[int] = Query(None, ge=2010, le=2030),
-    end_year: Optional[int] = Query(None, ge=2010, le=2030),
-    db: Session = Depends(get_db)
+    start_year: int | None = Query(None, ge=2010, le=2030),
+    end_year: int | None = Query(None, ge=2010, le=2030),
+    db: Session = Depends(get_db),
 ):
     """
     Get topic distribution trends by academic year.
@@ -128,8 +122,8 @@ async def get_year_wise_trends(
     """
     query = db.query(
         Question.year,
-        func.count(Question.question_id).label('question_count'),
-        func.count(func.distinct(Question.topic_id)).label('unique_topics')
+        func.count(Question.question_id).label("question_count"),
+        func.count(func.distinct(Question.topic_id)).label("unique_topics"),
     )
 
     # Apply year filters
@@ -141,20 +135,16 @@ async def get_year_wise_trends(
     results = query.group_by(Question.year).order_by(Question.year.desc()).all()
 
     return [
-        {
-            "year": year,
-            "question_count": question_count,
-            "unique_topics": unique_topics
-        }
+        {"year": year, "question_count": question_count, "unique_topics": unique_topics}
         for year, question_count, unique_topics in results
     ]
 
 
 @router.get("/difficulty-distribution")
 async def get_difficulty_distribution(
-    course_id: Optional[int] = Query(None, description="Filter by course"),
-    year: Optional[int] = Query(None, ge=2010, le=2030, description="Filter by year"),
-    db: Session = Depends(get_db)
+    course_id: int | None = Query(None, description="Filter by course"),
+    year: int | None = Query(None, ge=2010, le=2030, description="Filter by year"),
+    db: Session = Depends(get_db),
 ):
     """
     Get distribution of questions by difficulty level.
@@ -174,10 +164,7 @@ async def get_difficulty_distribution(
             {"difficulty": "easy", "count": 33, "percentage": 21.2}
         ]
     """
-    query = db.query(
-        Question.difficulty,
-        func.count(Question.question_id).label('count')
-    )
+    query = db.query(Question.difficulty, func.count(Question.question_id).label("count"))
 
     # Apply filters
     if course_id:
@@ -194,7 +181,7 @@ async def get_difficulty_distribution(
         {
             "difficulty": difficulty,
             "count": count,
-            "percentage": round((count / total * 100) if total > 0 else 0, 1)
+            "percentage": round((count / total * 100) if total > 0 else 0, 1),
         }
         for difficulty, count in results
     ]
@@ -202,8 +189,7 @@ async def get_difficulty_distribution(
 
 @router.get("/exam-type-distribution")
 async def get_exam_type_distribution(
-    year: Optional[int] = Query(None, ge=2010, le=2030),
-    db: Session = Depends(get_db)
+    year: int | None = Query(None, ge=2010, le=2030), db: Session = Depends(get_db)
 ):
     """
     Get distribution of questions by exam type.
@@ -217,20 +203,14 @@ async def get_exam_type_distribution(
     Example:
         GET /api/analytics/exam-type-distribution?year=2023
     """
-    query = db.query(
-        Question.exam_type,
-        func.count(Question.question_id).label('count')
-    )
+    query = db.query(Question.exam_type, func.count(Question.question_id).label("count"))
 
     if year:
         query = query.filter(Question.year == year)
 
-    results = query.group_by(Question.exam_type).order_by(desc('count')).all()
+    results = query.group_by(Question.exam_type).order_by(desc("count")).all()
 
-    return [
-        {"exam_type": exam_type, "count": count}
-        for exam_type, count in results
-    ]
+    return [{"exam_type": exam_type, "count": count} for exam_type, count in results]
 
 
 @router.get("/resource-summary")
@@ -250,54 +230,38 @@ async def get_resource_summary(db: Session = Depends(get_db)):
         }
     """
     # Resources by type
-    by_type = db.query(
-        Resource.resource_type,
-        func.count(Resource.resource_id).label('count')
-    ).group_by(Resource.resource_type).all()
+    by_type = (
+        db.query(Resource.resource_type, func.count(Resource.resource_id).label("count"))
+        .group_by(Resource.resource_type)
+        .all()
+    )
 
     # Resources by year
-    by_year = db.query(
-        Resource.year_published,
-        func.count(Resource.resource_id).label('count')
-    ).filter(
-        Resource.year_published.isnot(None)
-    ).group_by(
-        Resource.year_published
-    ).order_by(
-        Resource.year_published.desc()
-    ).all()
+    by_year = (
+        db.query(Resource.year_published, func.count(Resource.resource_id).label("count"))
+        .filter(Resource.year_published.isnot(None))
+        .group_by(Resource.year_published)
+        .order_by(Resource.year_published.desc())
+        .all()
+    )
 
     # Resources by course
-    by_course = db.query(
-        Course.course_title,
-        func.count(Resource.resource_id).label('count')
-    ).join(
-        Resource, Course.course_id == Resource.course_id, isouter=True
-    ).group_by(
-        Course.course_title
-    ).all()
+    by_course = (
+        db.query(Course.course_title, func.count(Resource.resource_id).label("count"))
+        .join(Resource, Course.course_id == Resource.course_id, isouter=True)
+        .group_by(Course.course_title)
+        .all()
+    )
 
     return {
-        "by_type": [
-            {"resource_type": rt, "count": count}
-            for rt, count in by_type
-        ],
-        "by_year": [
-            {"academic_year": year, "count": count}
-            for year, count in by_year
-        ],
-        "by_course": [
-            {"course_title": course, "count": count}
-            for course, count in by_course
-        ]
+        "by_type": [{"resource_type": rt, "count": count} for rt, count in by_type],
+        "by_year": [{"academic_year": year, "count": count} for year, count in by_year],
+        "by_course": [{"course_title": course, "count": count} for course, count in by_course],
     }
 
 
 @router.get("/topic-coverage")
-async def get_topic_coverage(
-    course_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
-):
+async def get_topic_coverage(course_id: int | None = Query(None), db: Session = Depends(get_db)):
     """
     Get topic coverage analysis showing which topics have questions/resources.
 
@@ -310,28 +274,27 @@ async def get_topic_coverage(
     Example:
         GET /api/analytics/topic-coverage?course_id=1
     """
-    query = db.query(
-        Topic.topic_id,
-        Topic.topic_name,
-        Course.course_title,
-        func.count(func.distinct(Question.question_id)).label('question_count'),
-        func.count(func.distinct(Resource.resource_id)).label('resource_count')
-    ).join(
-        Course, Topic.course_id == Course.course_id
-    ).join(
-        Question, Topic.topic_id == Question.topic_id, isouter=True
-    ).join(
-        Resource, Topic.course_id == Resource.course_id, isouter=True
+    query = (
+        db.query(
+            Topic.topic_id,
+            Topic.topic_name,
+            Course.course_title,
+            func.count(func.distinct(Question.question_id)).label("question_count"),
+            func.count(func.distinct(Resource.resource_id)).label("resource_count"),
+        )
+        .join(Course, Topic.course_id == Course.course_id)
+        .join(Question, Topic.topic_id == Question.topic_id, isouter=True)
+        .join(Resource, Topic.course_id == Resource.course_id, isouter=True)
     )
 
     if course_id:
         query = query.filter(Topic.course_id == course_id)
 
-    results = query.group_by(
-        Topic.topic_id, Topic.topic_name, Course.course_title
-    ).order_by(
-        desc('question_count')
-    ).all()
+    results = (
+        query.group_by(Topic.topic_id, Topic.topic_name, Course.course_title)
+        .order_by(desc("question_count"))
+        .all()
+    )
 
     return [
         {
@@ -340,7 +303,7 @@ async def get_topic_coverage(
             "course_title": course_title,
             "question_count": question_count,
             "resource_count": resource_count,
-            "has_content": question_count > 0 or resource_count > 0
+            "has_content": question_count > 0 or resource_count > 0,
         }
         for topic_id, topic_name, course_title, question_count, resource_count in results
     ]
@@ -348,8 +311,7 @@ async def get_topic_coverage(
 
 @router.get("/marks-distribution")
 async def get_marks_distribution(
-    course_id: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    course_id: int | None = Query(None), db: Session = Depends(get_db)
 ):
     """
     Get distribution of marks across questions.
@@ -378,10 +340,7 @@ async def get_marks_distribution(
         query = query.filter(Question.course_id == course_id)
 
     # Get distribution
-    distribution = db.query(
-        Question.marks,
-        func.count(Question.question_id).label('count')
-    )
+    distribution = db.query(Question.marks, func.count(Question.question_id).label("count"))
     if course_id:
         distribution = distribution.filter(Question.course_id == course_id)
 
@@ -389,10 +348,10 @@ async def get_marks_distribution(
 
     # Get statistics
     stats = db.query(
-        func.avg(Question.marks).label('avg_marks'),
-        func.min(Question.marks).label('min_marks'),
-        func.max(Question.marks).label('max_marks'),
-        func.sum(Question.marks).label('total_marks')
+        func.avg(Question.marks).label("avg_marks"),
+        func.min(Question.marks).label("min_marks"),
+        func.max(Question.marks).label("max_marks"),
+        func.sum(Question.marks).label("total_marks"),
     )
     if course_id:
         stats = stats.filter(Question.course_id == course_id)
@@ -400,16 +359,13 @@ async def get_marks_distribution(
     stats_result = stats.first()
 
     return {
-        "distribution": [
-            {"marks": marks, "count": count}
-            for marks, count in dist_results
-        ],
+        "distribution": [{"marks": marks, "count": count} for marks, count in dist_results],
         "statistics": {
             "avg_marks": round(float(stats_result.avg_marks or 0), 2),
             "min_marks": stats_result.min_marks or 0,
             "max_marks": stats_result.max_marks or 0,
-            "total_marks": stats_result.total_marks or 0
-        }
+            "total_marks": stats_result.total_marks or 0,
+        },
     }
 
 
@@ -424,22 +380,21 @@ async def get_course_statistics(db: Session = Depends(get_db)):
     Example:
         GET /api/analytics/course-statistics
     """
-    results = db.query(
-        Course.course_id,
-        Course.course_code,
-        Course.course_title,
-        func.count(func.distinct(Topic.topic_id)).label('topic_count'),
-        func.count(func.distinct(Question.question_id)).label('question_count'),
-        func.count(func.distinct(Resource.resource_id)).label('resource_count')
-    ).join(
-        Topic, Course.course_id == Topic.course_id, isouter=True
-    ).join(
-        Question, Course.course_id == Question.course_id, isouter=True
-    ).join(
-        Resource, Course.course_id == Resource.course_id, isouter=True
-    ).group_by(
-        Course.course_id, Course.course_code, Course.course_title
-    ).all()
+    results = (
+        db.query(
+            Course.course_id,
+            Course.course_code,
+            Course.course_title,
+            func.count(func.distinct(Topic.topic_id)).label("topic_count"),
+            func.count(func.distinct(Question.question_id)).label("question_count"),
+            func.count(func.distinct(Resource.resource_id)).label("resource_count"),
+        )
+        .join(Topic, Course.course_id == Topic.course_id, isouter=True)
+        .join(Question, Course.course_id == Question.course_id, isouter=True)
+        .join(Resource, Course.course_id == Resource.course_id, isouter=True)
+        .group_by(Course.course_id, Course.course_code, Course.course_title)
+        .all()
+    )
 
     return [
         {
@@ -449,7 +404,7 @@ async def get_course_statistics(db: Session = Depends(get_db)):
             "topic_count": topic_count,
             "question_count": question_count,
             "resource_count": resource_count,
-            "total_items": topic_count + question_count + resource_count
+            "total_items": topic_count + question_count + resource_count,
         }
         for course_id, course_code, course_title, topic_count, question_count, resource_count in results
     ]

@@ -25,25 +25,23 @@ Learning Objectives:
 - Practice database transactions for large operations
 """
 
-import sys
-import os
 import argparse
-from typing import List, Tuple
+import os
+import sys
 
 # Add parent directory to path to import app modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 from tqdm import tqdm
 
 from app.db.database import SessionLocal
-from app.db.models import Resource, ResourceChunk, ChunkEmbedding
-from app.services.embedding_service import EmbeddingService
+from app.db.models import ChunkEmbedding, Resource, ResourceChunk
 from app.services.chunking_service import ChunkingService
+from app.services.embedding_service import EmbeddingService
 
 
-def get_resources_to_process(db: Session, resource_id: int = None) -> List[Resource]:
+def get_resources_to_process(db: Session, resource_id: int = None) -> list[Resource]:
     """
     Get resources that need embedding generation
 
@@ -67,10 +65,8 @@ def get_resources_to_process(db: Session, resource_id: int = None) -> List[Resou
 
 
 def chunk_resource(
-    resource: Resource,
-    chunking_service: ChunkingService,
-    db: Session
-) -> List[ResourceChunk]:
+    resource: Resource, chunking_service: ChunkingService, db: Session
+) -> list[ResourceChunk]:
     """
     Chunk a resource and store chunks in database
 
@@ -88,22 +84,21 @@ def chunk_resource(
         return []
 
     # Check if chunks already exist
-    existing_chunks = db.query(ResourceChunk).filter(
-        ResourceChunk.resource_id == resource.resource_id
-    ).count()
+    existing_chunks = (
+        db.query(ResourceChunk).filter(ResourceChunk.resource_id == resource.resource_id).count()
+    )
 
     if existing_chunks > 0:
-        print(f"  ℹ️  Resource {resource.resource_id} already has {existing_chunks} chunks, skipping chunking")
-        chunks = db.query(ResourceChunk).filter(
-            ResourceChunk.resource_id == resource.resource_id
-        ).all()
+        print(
+            f"  ℹ️  Resource {resource.resource_id} already has {existing_chunks} chunks, skipping chunking"
+        )
+        chunks = (
+            db.query(ResourceChunk).filter(ResourceChunk.resource_id == resource.resource_id).all()
+        )
         return chunks
 
     # Chunk the resource
-    chunk_data = chunking_service.chunk_resource(
-        resource.description,
-        resource.resource_id
-    )
+    chunk_data = chunking_service.chunk_resource(resource.description, resource.resource_id)
 
     if not chunk_data:
         print(f"  ⚠️  No chunks generated for resource {resource.resource_id}")
@@ -115,7 +110,7 @@ def chunk_resource(
         chunk = ResourceChunk(
             resource_id=chunk_dict["resource_id"],
             chunk_text=chunk_dict["chunk_text"],
-            chunk_order=chunk_dict["chunk_order"]
+            chunk_order=chunk_dict["chunk_order"],
         )
         db.add(chunk)
         chunks.append(chunk)
@@ -128,10 +123,10 @@ def chunk_resource(
 
 
 def generate_embeddings_for_chunks(
-    chunks: List[ResourceChunk],
+    chunks: list[ResourceChunk],
     embedding_service: EmbeddingService,
     db: Session,
-    force: bool = False
+    force: bool = False,
 ) -> int:
     """
     Generate embeddings for chunks
@@ -153,9 +148,9 @@ def generate_embeddings_for_chunks(
 
     for chunk in chunks:
         # Check if embedding already exists
-        existing = db.query(ChunkEmbedding).filter(
-            ChunkEmbedding.chunk_id == chunk.chunk_id
-        ).first()
+        existing = (
+            db.query(ChunkEmbedding).filter(ChunkEmbedding.chunk_id == chunk.chunk_id).first()
+        )
 
         if existing and not force:
             continue
@@ -174,21 +169,18 @@ def generate_embeddings_for_chunks(
 
     # Store embeddings
     count = 0
-    for chunk, embedding in zip(chunks_to_process, embeddings):
+    for chunk, embedding in zip(chunks_to_process, embeddings, strict=False):
         # Check if embedding already exists (in case of force regeneration)
-        existing = db.query(ChunkEmbedding).filter(
-            ChunkEmbedding.chunk_id == chunk.chunk_id
-        ).first()
+        existing = (
+            db.query(ChunkEmbedding).filter(ChunkEmbedding.chunk_id == chunk.chunk_id).first()
+        )
 
         if existing:
             # Update existing
             existing.embedding = embedding.tolist()
         else:
             # Create new
-            chunk_embedding = ChunkEmbedding(
-                chunk_id=chunk.chunk_id,
-                embedding=embedding.tolist()
-            )
+            chunk_embedding = ChunkEmbedding(chunk_id=chunk.chunk_id, embedding=embedding.tolist())
             db.add(chunk_embedding)
 
         count += 1
@@ -202,25 +194,17 @@ def generate_embeddings_for_chunks(
 
 def main():
     """Main function"""
-    parser = argparse.ArgumentParser(
-        description="Generate embeddings for resource chunks"
-    )
+    parser = argparse.ArgumentParser(description="Generate embeddings for resource chunks")
     parser.add_argument(
         "--batch-size",
         type=int,
         default=32,
-        help="Number of resources to process in one transaction (default: 32)"
+        help="Number of resources to process in one transaction (default: 32)",
     )
     parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Regenerate embeddings even if they already exist"
+        "--force", action="store_true", help="Regenerate embeddings even if they already exist"
     )
-    parser.add_argument(
-        "--resource-id",
-        type=int,
-        help="Process only a specific resource ID"
-    )
+    parser.add_argument("--resource-id", type=int, help="Process only a specific resource ID")
 
     args = parser.parse_args()
 
@@ -256,9 +240,11 @@ def main():
 
         # Process resources in batches
         for i in range(0, len(resources), args.batch_size):
-            batch = resources[i:i + args.batch_size]
+            batch = resources[i : i + args.batch_size]
 
-            print(f"\n📦 Processing batch {i // args.batch_size + 1}/{(len(resources) + args.batch_size - 1) // args.batch_size}")
+            print(
+                f"\n📦 Processing batch {i // args.batch_size + 1}/{(len(resources) + args.batch_size - 1) // args.batch_size}"
+            )
 
             for resource in tqdm(batch, desc="Resources"):
                 try:
@@ -268,10 +254,7 @@ def main():
 
                     # Generate embeddings
                     embeddings_generated = generate_embeddings_for_chunks(
-                        chunks,
-                        embedding_service,
-                        db,
-                        force=args.force
+                        chunks, embedding_service, db, force=args.force
                     )
                     total_embeddings += embeddings_generated
 
@@ -282,7 +265,7 @@ def main():
 
             # Commit batch
             db.commit()
-            print(f"✅ Batch committed")
+            print("✅ Batch committed")
 
         print()
         print("=" * 60)
@@ -299,7 +282,9 @@ def main():
         print("📈 Database Statistics:")
         print(f"   Total chunks in DB: {total_chunks_db}")
         print(f"   Total embeddings in DB: {total_embeddings_db}")
-        print(f"   Coverage: {(total_embeddings_db / total_chunks_db * 100) if total_chunks_db > 0 else 0:.1f}%")
+        print(
+            f"   Coverage: {(total_embeddings_db / total_chunks_db * 100) if total_chunks_db > 0 else 0:.1f}%"
+        )
         print()
 
     except Exception as e:
