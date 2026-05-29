@@ -144,13 +144,15 @@ Level 0 (leaf): [10, 20]
 
 ## 🐛 Debugging Exercise
 
-**Task**: The B+ tree implementation is incomplete (TODOs).
+**Note**: The B+ tree implementation in `bplus_tree.py` is **complete and
+tested** — it is a working reference, not a set of stubs.
 
-Try to:
-1. Implement the insert method
-2. Test with the demo sequence
-3. Fix any bugs you encounter
-4. Document what went wrong and how you fixed it
+To get hands-on practice, try this exercise:
+1. Read the demo sequence and predict the tree shape after each insert
+2. Re-implement the `insert` method yourself in a scratch file, then compare
+   with the reference
+3. Add an extra test case and verify it passes
+4. Document anything that surprised you in `weeks/week_07_*/reflection.md`
 
 ---
 

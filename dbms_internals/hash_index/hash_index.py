@@ -27,12 +27,16 @@ When NOT to use Hash Indexes?
 - ORDER BY queries
 - Inequality searches: WHERE age < 30
 
-TODO (Week 7):
-1. Implement hash function
-2. Handle collisions (chaining)
-3. Implement insert
-4. Implement search
-5. Visualize bucket distribution
+Reference implementation (Week 7):
+This module is a COMPLETE, working reference. It already implements:
+1. The hash function
+2. Collision handling (chaining)
+3. The insert operation
+4. The search operation
+5. Bucket-distribution visualization
+
+Learner exercise (optional): Before reading the code, try implementing it
+yourself first, then compare with this reference.
 """
 
 from dataclasses import dataclass, field
