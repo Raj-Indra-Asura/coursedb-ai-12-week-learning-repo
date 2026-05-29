@@ -455,7 +455,25 @@ This is a personal learning project. Code is provided as-is for educational purp
 
 ---
 
-**🎯 Current Progress**: Week 0 - Repository Setup
+**🎯 Current Progress**: Infrastructure complete; learning content in progress
+
+The engineering scaffold is in place and verified end-to-end (see
+[VERIFICATION_REPORT.md](VERIFICATION_REPORT.md) for the honest, file-by-file
+state):
+
+- ✅ Docker + pgvector bootstrap (`scripts/init_db.sql`, `docker-compose.yml`, `Makefile`)
+- ✅ Alembic migrations reproduce the full schema from zero
+- ✅ FastAPI backend with CRUD, analytics, search, and DBMS-demo endpoints
+- ✅ Semantic-search pipeline (chunking → embeddings → pgvector) + smoke test
+- ✅ Test suite passing with ≥ 70% coverage on `app/` and `dbms_internals/`
+- ✅ CI workflow (ruff, black, mypy, pytest, alembic upgrade)
+- ✅ Evaluation harness and auto-generated reference docs
+- 📝 **Learner-owned content** (theory notes, reflections, normalization/ER/
+  transaction write-ups, exam answers) is intentionally left as templates with
+  `TODO(learner)` markers — see
+  [docs/learning_navigation/AI_BOUNDARIES.md](docs/learning_navigation/AI_BOUNDARIES.md).
+
 **🚦 Status**: 🟢 In Progress
 **📅 Started**: May 2026
+**🤝 Contributing**: see [CONTRIBUTING.md](CONTRIBUTING.md)
 **🎓 Learning Journey**: Follow my progress in [LEARNING_LOG.md](LEARNING_LOG.md)
