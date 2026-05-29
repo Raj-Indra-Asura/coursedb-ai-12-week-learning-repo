@@ -26,12 +26,15 @@ Learning Objectives:
 """
 
 import argparse
+import hashlib
 import os
+import re
 import sys
 
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import numpy as np
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
@@ -39,6 +42,61 @@ from app.db.database import SessionLocal
 from app.db.models import ChunkEmbedding, Resource, ResourceChunk
 from app.services.chunking_service import ChunkingService
 from app.services.embedding_service import EmbeddingService
+
+_EMBEDDING_DIM = 384
+
+
+class _HashingEncoder:
+    """Deterministic, offline fallback encoder.
+
+    Mirrors the fallback used by ``scripts/smoke_test_semantic_search.py`` and
+    ``scripts/run_evaluation.py`` so this script can populate
+    ``chunk_embeddings`` even when ``sentence-transformers``/``torch`` are not
+    installed (for example in CI). It uses the hashing trick over word tokens
+    to build a stable, L2-normalised vector. Vector quality is lower than the
+    real model, but the pipeline is exercised end-to-end and rows are real.
+
+    The public surface matches the subset of :class:`EmbeddingService` used by
+    this script (``generate_embeddings_batch``).
+    """
+
+    def __init__(self, dim: int = _EMBEDDING_DIM) -> None:
+        self.dim = dim
+
+    def _bucket(self, token: str) -> int:
+        digest = hashlib.md5(token.encode("utf-8")).hexdigest()
+        return int(digest, 16) % self.dim
+
+    def _encode_one(self, text_value: str) -> np.ndarray:
+        vector = np.zeros(self.dim, dtype=np.float32)
+        for token in re.findall(r"[a-z0-9+]+", (text_value or "").lower()):
+            vector[self._bucket(token)] += 1.0
+        norm = np.linalg.norm(vector)
+        if norm > 0:
+            vector /= norm
+        return vector
+
+    def generate_embeddings_batch(self, texts: list[str]) -> np.ndarray:
+        """Encode a batch of texts into an ``(n, dim)`` float array."""
+        if not texts:
+            raise ValueError("Text list cannot be empty")
+        return np.vstack([self._encode_one(text) for text in texts])
+
+
+def get_embedding_service():
+    """Return the real embedding service when available, else the fallback.
+
+    Returns:
+        Either an :class:`EmbeddingService` (when ``sentence-transformers`` is
+        installed) or a deterministic :class:`_HashingEncoder` fallback.
+    """
+    try:
+        service = EmbeddingService()
+        print("🔧 Using EmbeddingService (Sentence Transformers).")
+        return service
+    except Exception as exc:  # noqa: BLE001 - any failure means fall back offline
+        print(f"⚠️  Falling back to deterministic hashing encoder ({exc}).")
+        return _HashingEncoder()
 
 
 def get_resources_to_process(db: Session, resource_id: int = None) -> list[Resource]:
@@ -217,7 +275,7 @@ def main():
 
     # Initialize services
     print("🔧 Initializing services...")
-    embedding_service = EmbeddingService()
+    embedding_service = get_embedding_service()
     chunking_service = ChunkingService()
 
     # Create database session

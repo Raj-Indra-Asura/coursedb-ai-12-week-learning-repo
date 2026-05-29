@@ -1,0 +1,55 @@
+{
+  "description": "Ten semantic-search evaluation queries for CourseDB-AI. Each query maps to a CSE 2203 syllabus topic. 'expected_topic' is the topic the retrieved chunk should relate to; relevance scoring (1-5) is done by the learner using docs/evaluation/rubric.md. No expected answer text is provided on purpose.",
+  "queries": [
+    {
+      "id": 1,
+      "query": "What causes a deadlock between two transactions and how is it detected?",
+      "expected_topic": "deadlock"
+    },
+    {
+      "id": 2,
+      "query": "How does normalization remove redundancy and update anomalies?",
+      "expected_topic": "normalization"
+    },
+    {
+      "id": 3,
+      "query": "Explain how a B+ tree supports efficient range queries.",
+      "expected_topic": "b+ tree indexing"
+    },
+    {
+      "id": 4,
+      "query": "What are the ACID properties of a database transaction?",
+      "expected_topic": "transactions"
+    },
+    {
+      "id": 5,
+      "query": "How does an SQL JOIN combine rows from two related tables?",
+      "expected_topic": "sql joins"
+    },
+    {
+      "id": 6,
+      "query": "What is an entity-relationship diagram and how do cardinalities work?",
+      "expected_topic": "er modeling"
+    },
+    {
+      "id": 7,
+      "query": "How does the query optimizer choose an execution plan using cost estimation?",
+      "expected_topic": "query optimization"
+    },
+    {
+      "id": 8,
+      "query": "What is a functional dependency and how does it relate to candidate keys?",
+      "expected_topic": "functional dependencies"
+    },
+    {
+      "id": 9,
+      "query": "How does hash indexing provide constant-time equality lookups?",
+      "expected_topic": "hash index"
+    },
+    {
+      "id": 10,
+      "query": "What is write-ahead logging and how does it support crash recovery?",
+      "expected_topic": "recovery and logging"
+    }
+  ]
+}

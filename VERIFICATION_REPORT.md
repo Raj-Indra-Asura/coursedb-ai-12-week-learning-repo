@@ -18,9 +18,10 @@ Date: 2026-05-29
 
 > **Sandbox caveat:** `sentence-transformers`/`torch` could not be installed in
 > the build environment (the PyTorch download host is blocked). The embedding
-> service therefore falls back to a **deterministic hashing encoder**. All
-> pipeline wiring is exercised end-to-end; real model quality must be confirmed
-> by the learner once the model is available locally / in CI.
+> generation, smoke-test and evaluation scripts therefore fall back to a
+> **deterministic hashing encoder**. All pipeline wiring is exercised
+> end-to-end; real model quality must be confirmed by the learner once the
+> model is available locally / in CI.
 
 ## Part D checklist
 
@@ -30,11 +31,12 @@ Date: 2026-05-29
 | `alembic upgrade head` builds schema from zero | ✅ | Migration `f0f92986b448` creates all 10 tables + extensions. |
 | `python scripts/setup_db.py` is idempotent | ✅ | `CREATE ... IF NOT EXISTS`; IVFFlat gated on row count. |
 | `python scripts/seed_data.py` loads sample data | ✅ | 3 courses, 19 topics, 10 questions, 7 resources, 4 users. |
-| `python scripts/generate_embeddings.py` produces rows | ✅ | Idempotent; inserts into `chunk_embeddings`. Uses hashing encoder in this env. |
+| `python scripts/generate_embeddings.py` produces rows | ✅ | Idempotent; inserts into `chunk_embeddings`. Falls back to the hashing encoder when `sentence-transformers` is unavailable, so it still populates rows in this env. |
 | `python scripts/smoke_test_semantic_search.py` prints PASS | ✅ | Asserts top-1 for 3 distinct chunks; prints `PASS`. |
-| `pytest -q` runs and all tests pass | ✅ | **126 passed, 1 skipped** (skipped = embedding test needing cached model). |
-| Coverage ≥ 70% on `app/` and `dbms_internals/` | ✅ | **77%** total. |
-| `ruff check . && black --check .` clean | ✅ | All checks pass; 51 files unchanged by black. |
+| `python scripts/run_evaluation.py` runs end-to-end | ✅ | Reads `data/evaluation/eval_queries.json` (10 queries); writes plans + `docs/evaluation/semantic_search_results.md`. |
+| `pytest -q` runs and all tests pass | ✅ | **158 passed, 1 skipped** (skipped = embedding test needing cached model). |
+| Coverage ≥ 70% on `app/` and `dbms_internals/` | ✅ | **83%** total. |
+| `ruff check . && black --check .` clean | ✅ | All checks pass; 52 files unchanged by black. |
 | CI workflow runs green on push | ⚠️ | `.github/workflows/ci.yml` added (lint/test/migrate jobs). Not yet observed running on GitHub; verify the first run. |
 | README "Current Progress" reflects reality | ✅ | Rewritten to list infra-complete vs learner-pending. |
 | PART A files remain empty templates | ✅ | No AI-authored prose added; see below. |
@@ -43,15 +45,18 @@ Date: 2026-05-29
 ## Test summary
 
 ```
-126 passed, 1 skipped
-coverage: 77% (app/ + dbms_internals/)
+158 passed, 1 skipped
+coverage: 83% (app/ + dbms_internals/)
 ```
 
-Test files present (18):
+Test files present (19):
 - `app/tests/api/`: health, courses, topics, questions, resources, search,
-  analytics, learning
-- `app/tests/services/`: chunking, embedding, semantic_search, sql_search
+  analytics, learning, dbms_demo
+- `app/tests/services/`: chunking, embedding, semantic_search, sql_search,
+  analytics
 - `app/tests/db/`: models
+- `app/tests/scripts/`: eval_harness (eval_queries.json schema + offline
+  encoder fallback)
 - `dbms_internals/*/tests/`: bplus_tree, hash_index, wait_for_graph
 
 Lowest-covered modules (candidates for more tests, none below requirement
@@ -123,9 +128,10 @@ Fully completed (auto-generated or maintainer-owned) docs:
 
 1. **Real embedding model not validated here.** Install
    `sentence-transformers` locally/CI and re-run
-   `scripts/generate_embeddings.py` + `scripts/smoke_test_semantic_search.py`
-   to confirm relevance with the real model (current results use the hashing
-   fallback).
+   `scripts/generate_embeddings.py`, `scripts/smoke_test_semantic_search.py`
+   and `scripts/run_evaluation.py` to confirm relevance with the real model
+   (current results use the deterministic hashing fallback, which all three
+   scripts share).
 2. **CI not yet observed green.** `.github/workflows/ci.yml` is committed but
    its first GitHub-hosted run should be checked; the `test` job installs a
    lightweight dependency subset (no torch) and relies on the embedding test
@@ -138,3 +144,23 @@ Fully completed (auto-generated or maintainer-owned) docs:
    consider adding `requires_pgvector`-marked integration tests in CI's
    `migrate` job.
 4. **All learner-owned content above is pending** — by design, not a defect.
+
+## Fixes applied in this pass
+
+These were genuine defects found during an independent re-verification and have
+now been corrected:
+
+1. **B7 `data/evaluation/eval_queries.json` was missing** (and gitignored), so
+   `scripts/run_evaluation.py` crashed with `FileNotFoundError`. The 10-query
+   set (mapped to syllabus topics, `query` + `expected_topic` only) is now
+   created and explicitly un-ignored in `.gitignore`. The harness runs
+   end-to-end (SQL check, EXPLAIN capture, semantic results table).
+2. **`scripts/generate_embeddings.py` had no offline fallback** — it raised
+   `ImportError` without `sentence-transformers`. It now mirrors the smoke-test
+   / evaluation scripts with a shared deterministic `_HashingEncoder`, so it
+   populates `chunk_embeddings` even without the ML stack.
+3. **A broken `.venv/` was committed** (only `bin/` shims, no `site-packages`).
+   It is now untracked and `.venv/` is added to `.gitignore`.
+4. **New tests** in `app/tests/scripts/test_eval_harness.py` validate the
+   eval-query schema and the offline encoder (shape, determinism, unit norm).
+

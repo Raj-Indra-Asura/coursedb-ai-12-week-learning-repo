@@ -8,6 +8,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -63,6 +64,8 @@ data/processed/*.csv
 data/processed/*.json
 data/evaluation/*.csv
 data/evaluation/*.json
+# Keep the curated evaluation query set under version control (B7 deliverable).
+!data/evaluation/eval_queries.json
 
 # Model cache
 .cache/
