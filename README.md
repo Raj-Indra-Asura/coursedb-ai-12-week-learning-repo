@@ -4,6 +4,12 @@
 
 ---
 
+## 🚀 **NEW LEARNERS: [START HERE](START_HERE.md)** 🚀
+
+**If this is your first time**, click the link above to begin your structured learning journey. The START_HERE guide will walk you through the complete 12-week program with step-by-step navigation.
+
+---
+
 ## 🎯 Project Overview
 
 **CourseDB-AI** is a DBMS-centered AI search system that stores academic course resources, previous-year questions, textbook chapters, topics, and metadata in a normalized relational database, then adds semantic search using embeddings and vector similarity.
@@ -83,6 +89,7 @@ CourseDB-AI combines:
 - **Week 12**: Evaluation, Polish, Portfolio
 
 📖 **Full roadmap**: See [ROADMAP.md](ROADMAP.md)
+📍 **Start learning**: See [START_HERE.md](START_HERE.md) for your guided journey
 
 ---
 

@@ -6,6 +6,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Back to Week 1 Overview](README.md)** | **[Next: Exercises →](exercises.md)**
+
+---
+
 ## 📝 My Understanding
 
 ### What is a DBMS?
@@ -92,3 +98,9 @@ How this relates to:
 ---
 
 **Completed**: [Date]
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 1 Overview](README.md)** | **[Next: Exercises →](exercises.md)**

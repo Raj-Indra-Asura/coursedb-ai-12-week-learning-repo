@@ -1,5 +1,11 @@
 # Week 1: Implementation Plan
 
+## 🧭 Navigation
+
+**[← Previous: Exercises](exercises.md)** | **[Back to Week 1](README.md)** | **[Next: Mini Project →](mini_project/README.md)**
+
+---
+
 ## 🎯 Goal
 Build a file-based academic resource storage system and experience its limitations firsthand. This hands-on failure will motivate the need for DBMS concepts in subsequent weeks.
 
@@ -265,3 +271,10 @@ By the end of this week, you should have:
 - Write SQL queries
 - Experience the power of declarative queries
 - Compare with your Week 1 file-based system
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Exercises](exercises.md)** | **[Back to Week 1](README.md)** | **[Next: Mini Project →](mini_project/README.md)**
+
