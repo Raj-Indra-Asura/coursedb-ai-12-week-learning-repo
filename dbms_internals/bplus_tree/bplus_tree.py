@@ -260,22 +260,18 @@ class BPlusTree:
 
         Args:
             node: Internal node to insert into
-            key: Key to insert
-            right_child: New right child node
-            child_index: Index where split occurred
-        """
-        # Find insertion position
-        insert_pos = child_index + 1
-        for i in range(child_index + 1, len(node.keys)):
-            if key < node.keys[i]:
-                insert_pos = i
-                break
-        else:
-            insert_pos = len(node.keys)
+            key: Separator key to insert
+            right_child: New right child node produced by the split
+            child_index: Index of the left child (the node that was split)
+                within ``node.children``
 
-        # Insert key and child
-        node.keys.insert(insert_pos, key)
-        node.children.insert(insert_pos + 1, right_child)
+        Learning Note:
+        - The left child sits at ``node.children[child_index]``; the separator
+          key therefore belongs at ``node.keys[child_index]`` and the new right
+          child immediately after it at ``node.children[child_index + 1]``.
+        """
+        node.keys.insert(child_index, key)
+        node.children.insert(child_index + 1, right_child)
 
         # Check if node needs split
         if len(node.keys) >= self.order:

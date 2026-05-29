@@ -59,7 +59,7 @@ async def list_resources(
     if resource_type is not None:
         query = query.filter(Resource.resource_type == resource_type)
     if academic_year is not None:
-        query = query.filter(Resource.academic_year == academic_year)
+        query = query.filter(Resource.year_published == academic_year)
     if search is not None:
         # Case-insensitive search in title or source_name
         search_filter = f"%{search}%"
@@ -338,11 +338,11 @@ async def get_resources_by_year(db: Session = Depends(get_db)):
     from sqlalchemy import func
 
     results = db.query(
-        Resource.academic_year,
+        Resource.year_published,
         func.count(Resource.resource_id).label('count')
-    ).filter(Resource.academic_year.isnot(None)).group_by(
-        Resource.academic_year
-    ).order_by(Resource.academic_year.desc()).all()
+    ).filter(Resource.year_published.isnot(None)).group_by(
+        Resource.year_published
+    ).order_by(Resource.year_published.desc()).all()
 
     return [{"academic_year": year, "count": count} for year, count in results]
 

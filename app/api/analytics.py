@@ -257,14 +257,14 @@ async def get_resource_summary(db: Session = Depends(get_db)):
 
     # Resources by year
     by_year = db.query(
-        Resource.academic_year,
+        Resource.year_published,
         func.count(Resource.resource_id).label('count')
     ).filter(
-        Resource.academic_year.isnot(None)
+        Resource.year_published.isnot(None)
     ).group_by(
-        Resource.academic_year
+        Resource.year_published
     ).order_by(
-        Resource.academic_year.desc()
+        Resource.year_published.desc()
     ).all()
 
     # Resources by course

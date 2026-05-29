@@ -131,8 +131,10 @@ class HashIndex:
         bucket_index = self._hash(key)
         bucket = self.buckets[bucket_index]
 
-        # Check if this is a new key
-        is_new = bucket.search(key) is None
+        # Check if this is a new key. We test key membership directly rather
+        # than relying on the searched value, because a stored value may itself
+        # be ``None`` (which would otherwise be indistinguishable from "absent").
+        is_new = all(k != key for k, _ in bucket.key_value_pairs)
 
         bucket.insert(key, value)
 

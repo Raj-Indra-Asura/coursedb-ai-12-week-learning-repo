@@ -17,11 +17,21 @@ Models:
 - LearningResource (Learning Navigation)
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint, Index, Float
-from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.sql import func
+
 from pgvector.sqlalchemy import Vector
-from datetime import datetime
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -51,6 +61,7 @@ class Course(Base):
     # Relationships
     topics = relationship("Topic", back_populates="course", cascade="all, delete-orphan")
     questions = relationship("Question", back_populates="course")
+    resources = relationship("Resource", back_populates="course", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Course(course_code='{self.course_code}', title='{self.course_title}')>"
@@ -77,6 +88,7 @@ class Topic(Base):
     # Relationships
     course = relationship("Course", back_populates="topics")
     questions = relationship("Question", back_populates="topic")
+    resources = relationship("Resource", back_populates="topic")
 
     def __repr__(self):
         return f"<Topic(topic_name='{self.topic_name}', course_id={self.course_id})>"
@@ -154,6 +166,8 @@ class Resource(Base):
 
     # Relationships
     chunks = relationship("ResourceChunk", back_populates="resource", cascade="all, delete-orphan")
+    course = relationship("Course", back_populates="resources")
+    topic = relationship("Topic", back_populates="resources")
 
     def __repr__(self):
         return f"<Resource(title='{self.title}', type='{self.resource_type}')>"

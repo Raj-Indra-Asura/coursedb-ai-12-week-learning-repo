@@ -18,23 +18,13 @@ Learning Objectives:
 - Track learning progress
 """
 
-import os
 from pathlib import Path
-from typing import List, Optional, Dict, Tuple
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from app.db.models import LearningWeek, LearningResource
-from app.schemas import (
-    LearningWeekCreate,
-    LearningWeekResponse,
-    LearningResourceCreate,
-    LearningResourceResponse,
-    NavigationResponse,
-    CurriculumOverviewResponse,
-    WeekStatusEnum,
-    LearningResourceTypeEnum
-)
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.db.models import LearningResource, LearningWeek
+from app.schemas import CurriculumOverviewResponse, LearningWeekResponse, NavigationResponse
 
 
 class LearningNavigationService:
@@ -42,8 +32,14 @@ class LearningNavigationService:
     Service for managing learning navigation and curriculum structure
     """
 
-    def __init__(self, repo_root: str = "/home/runner/work/coursedb-ai-12-week-learning-repo/coursedb-ai-12-week-learning-repo"):
-        self.repo_root = Path(repo_root)
+    def __init__(self, repo_root: str | None = None):
+        # Derive the repository root from this file's location so the service
+        # works regardless of the checkout path (local, CI, container). The
+        # service lives at <repo>/app/services/, so the root is two parents up.
+        if repo_root is None:
+            self.repo_root = Path(__file__).resolve().parents[2]
+        else:
+            self.repo_root = Path(repo_root)
         self.weeks_dir = self.repo_root / "weeks"
 
         # Week metadata mapping
@@ -77,7 +73,7 @@ class LearningNavigationService:
             ".sql": "code",
         }
 
-    def discover_weeks(self) -> List[Dict]:
+    def discover_weeks(self) -> list[dict]:
         """
         Discover all week directories in the repository
 
@@ -110,18 +106,20 @@ class LearningNavigationService:
             # Try to extract description from README
             description = self._extract_description(week_dir)
 
-            weeks.append({
-                "week_number": week_num,
-                "title": title,
-                "description": description,
-                "directory_path": str(week_dir.relative_to(self.repo_root)),
-                "status": status,
-                "absolute_path": str(week_dir)
-            })
+            weeks.append(
+                {
+                    "week_number": week_num,
+                    "title": title,
+                    "description": description,
+                    "directory_path": str(week_dir.relative_to(self.repo_root)),
+                    "status": status,
+                    "absolute_path": str(week_dir),
+                }
+            )
 
         return sorted(weeks, key=lambda w: w["week_number"])
 
-    def _extract_description(self, week_dir: Path) -> Optional[str]:
+    def _extract_description(self, week_dir: Path) -> str | None:
         """
         Extract description from week README file
 
@@ -136,7 +134,7 @@ class LearningNavigationService:
             return None
 
         try:
-            with open(readme_path, 'r', encoding='utf-8') as f:
+            with open(readme_path, encoding="utf-8") as f:
                 content = f.read()
                 # Look for "Why This Week Matters" or first paragraph
                 if "## 🎯 Why This Week Matters" in content:
@@ -155,12 +153,14 @@ class LearningNavigationService:
                     return " ".join(description_lines[:3])  # First 3 lines
 
                 # Fallback: get first non-empty paragraph
-                lines = [l.strip() for l in content.split("\n") if l.strip() and not l.startswith("#")]
+                lines = [
+                    ln.strip() for ln in content.split("\n") if ln.strip() and not ln.startswith("#")
+                ]
                 return lines[0] if lines else None
         except Exception:
             return None
 
-    def discover_resources(self, week_dir: Path) -> List[Dict]:
+    def discover_resources(self, week_dir: Path) -> list[dict]:
         """
         Discover all learning resources in a week directory
 
@@ -189,19 +189,21 @@ class LearningNavigationService:
             # Get title from filename
             title = self._get_resource_title(item)
 
-            resources.append({
-                "title": title,
-                "file_path": str(item.relative_to(self.repo_root)),
-                "resource_type": resource_type,
-                "description": None,
-                "order_index": order,
-                "absolute_path": str(item)
-            })
+            resources.append(
+                {
+                    "title": title,
+                    "file_path": str(item.relative_to(self.repo_root)),
+                    "resource_type": resource_type,
+                    "description": None,
+                    "order_index": order,
+                    "absolute_path": str(item),
+                }
+            )
             order += 1
 
         return resources
 
-    def _get_resource_type(self, file_path: Path) -> Optional[str]:
+    def _get_resource_type(self, file_path: Path) -> str | None:
         """
         Determine resource type from file name/extension
 
@@ -240,7 +242,7 @@ class LearningNavigationService:
         title = filename.replace("_", " ").title()
         return title
 
-    def initialize_curriculum(self, db: Session) -> List[LearningWeek]:
+    def initialize_curriculum(self, db: Session) -> list[LearningWeek]:
         """
         Initialize the learning curriculum in the database
         Discovers all weeks and their resources
@@ -257,9 +259,11 @@ class LearningNavigationService:
 
         for week_data in weeks_data:
             # Check if week already exists
-            existing_week = db.query(LearningWeek).filter(
-                LearningWeek.week_number == week_data["week_number"]
-            ).first()
+            existing_week = (
+                db.query(LearningWeek)
+                .filter(LearningWeek.week_number == week_data["week_number"])
+                .first()
+            )
 
             if existing_week:
                 # Update existing week
@@ -274,7 +278,7 @@ class LearningNavigationService:
                     title=week_data["title"],
                     description=week_data["description"],
                     directory_path=week_data["directory_path"],
-                    status=week_data["status"]
+                    status=week_data["status"],
                 )
                 db.add(week)
 
@@ -286,10 +290,14 @@ class LearningNavigationService:
 
             for resource_data in resources_data:
                 # Check if resource already exists
-                existing_resource = db.query(LearningResource).filter(
-                    LearningResource.week_id == week.week_id,
-                    LearningResource.file_path == resource_data["file_path"]
-                ).first()
+                existing_resource = (
+                    db.query(LearningResource)
+                    .filter(
+                        LearningResource.week_id == week.week_id,
+                        LearningResource.file_path == resource_data["file_path"],
+                    )
+                    .first()
+                )
 
                 if not existing_resource:
                     resource = LearningResource(
@@ -298,7 +306,7 @@ class LearningNavigationService:
                         file_path=resource_data["file_path"],
                         resource_type=resource_data["resource_type"],
                         description=resource_data["description"],
-                        order_index=resource_data["order_index"]
+                        order_index=resource_data["order_index"],
                     )
                     db.add(resource)
 
@@ -307,7 +315,7 @@ class LearningNavigationService:
         db.commit()
         return created_weeks
 
-    def get_week_by_number(self, db: Session, week_number: int) -> Optional[LearningWeek]:
+    def get_week_by_number(self, db: Session, week_number: int) -> LearningWeek | None:
         """
         Get week by week number with all resources
 
@@ -318,11 +326,9 @@ class LearningNavigationService:
         Returns:
             LearningWeek object or None
         """
-        return db.query(LearningWeek).filter(
-            LearningWeek.week_number == week_number
-        ).first()
+        return db.query(LearningWeek).filter(LearningWeek.week_number == week_number).first()
 
-    def get_navigation(self, db: Session, week_number: int) -> Optional[NavigationResponse]:
+    def get_navigation(self, db: Session, week_number: int) -> NavigationResponse | None:
         """
         Get navigation context for a specific week (current, prev, next)
 
@@ -349,9 +355,12 @@ class LearningNavigationService:
 
         # Calculate progress
         total_weeks = 12
-        completed_count = db.query(func.count(LearningWeek.week_id)).filter(
-            LearningWeek.status == "completed"
-        ).scalar() or 0
+        completed_count = (
+            db.query(func.count(LearningWeek.week_id))
+            .filter(LearningWeek.status == "completed")
+            .scalar()
+            or 0
+        )
 
         progress_percentage = (completed_count / total_weeks) * 100
 
@@ -360,7 +369,7 @@ class LearningNavigationService:
             previous_week=LearningWeekResponse.from_orm(previous_week) if previous_week else None,
             next_week=LearningWeekResponse.from_orm(next_week) if next_week else None,
             total_weeks=total_weeks,
-            progress_percentage=progress_percentage
+            progress_percentage=progress_percentage,
         )
 
     def get_curriculum_overview(self, db: Session) -> CurriculumOverviewResponse:
@@ -389,10 +398,10 @@ class LearningNavigationService:
             completed_weeks=completed,
             in_progress_weeks=in_progress,
             not_started_weeks=not_started,
-            overall_progress=overall_progress
+            overall_progress=overall_progress,
         )
 
-    def update_week_status(self, db: Session, week_number: int, status: str) -> Optional[LearningWeek]:
+    def update_week_status(self, db: Session, week_number: int, status: str) -> LearningWeek | None:
         """
         Update the status of a learning week
 

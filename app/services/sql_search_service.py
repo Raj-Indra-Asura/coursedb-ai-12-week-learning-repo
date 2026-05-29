@@ -19,11 +19,12 @@ Filter Options:
 - course_id: exact match
 """
 
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_, func
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from app.db.models import Question, Topic, Resource, Course
+from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+
+from app.db.models import Course, Question, Resource, Topic
 
 
 class SQLSearchService:
@@ -40,14 +41,14 @@ class SQLSearchService:
 
     def search_questions(
         self,
-        topic_name: Optional[str] = None,
-        difficulty: Optional[str] = None,
-        year: Optional[int] = None,
-        exam_type: Optional[str] = None,
-        course_id: Optional[int] = None,
+        topic_name: str | None = None,
+        difficulty: str | None = None,
+        year: int | None = None,
+        exam_type: str | None = None,
+        course_id: int | None = None,
         limit: int = 20,
-        offset: int = 0
-    ) -> List[Dict[str, Any]]:
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
         """
         Search questions with SQL filters
 
@@ -71,15 +72,12 @@ class SQLSearchService:
         """
         # Start with base query
         query = self.db.query(Question).options(
-            joinedload(Question.topic),
-            joinedload(Question.course)
+            joinedload(Question.topic), joinedload(Question.course)
         )
 
         # Apply filters dynamically
         if topic_name:
-            query = query.join(Topic).filter(
-                Topic.topic_name.ilike(f"%{topic_name}%")
-            )
+            query = query.join(Topic).filter(Topic.topic_name.ilike(f"%{topic_name}%"))
 
         if difficulty:
             query = query.filter(Question.difficulty == difficulty)
@@ -114,20 +112,20 @@ class SQLSearchService:
                 "topic_id": q.topic_id,
                 "topic_name": q.topic.topic_name if q.topic else None,
                 "course_id": q.course_id,
-                "course_title": q.course.course_title if q.course else None
+                "course_title": q.course.course_title if q.course else None,
             }
             for q in questions
         ]
 
     def search_resources(
         self,
-        resource_type: Optional[str] = None,
-        year: Optional[int] = None,
-        course_id: Optional[int] = None,
-        topic_id: Optional[int] = None,
+        resource_type: str | None = None,
+        year: int | None = None,
+        course_id: int | None = None,
+        topic_id: int | None = None,
         limit: int = 20,
-        offset: int = 0
-    ) -> List[Dict[str, Any]]:
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
         """
         Search resources with filters
 
@@ -148,8 +146,7 @@ class SQLSearchService:
         """
         # Start with base query
         query = self.db.query(Resource).options(
-            joinedload(Resource.course),
-            joinedload(Resource.topic)
+            joinedload(Resource.course), joinedload(Resource.topic)
         )
 
         # Apply filters
@@ -157,7 +154,7 @@ class SQLSearchService:
             query = query.filter(Resource.resource_type == resource_type)
 
         if year:
-            query = query.filter(Resource.year == year)
+            query = query.filter(Resource.year_published == year)
 
         if course_id:
             query = query.filter(Resource.course_id == course_id)
@@ -166,7 +163,7 @@ class SQLSearchService:
             query = query.filter(Resource.topic_id == topic_id)
 
         # Order by year descending
-        query = query.order_by(Resource.year.desc(), Resource.resource_id)
+        query = query.order_by(Resource.year_published.desc(), Resource.resource_id)
 
         # Apply pagination
         query = query.limit(limit).offset(offset)
@@ -181,22 +178,19 @@ class SQLSearchService:
                 "title": r.title,
                 "resource_type": r.resource_type,
                 "url": r.url,
-                "year": r.year,
+                "year": r.year_published,
                 "course_id": r.course_id,
                 "course_title": r.course.course_title if r.course else None,
                 "topic_id": r.topic_id,
                 "topic_name": r.topic.topic_name if r.topic else None,
-                "description": r.description
+                "description": r.description,
             }
             for r in resources
         ]
 
     def search_topics(
-        self,
-        topic_name: Optional[str] = None,
-        course_id: Optional[int] = None,
-        limit: int = 50
-    ) -> List[Dict[str, Any]]:
+        self, topic_name: str | None = None, course_id: int | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         """
         Search topics
 
@@ -212,18 +206,17 @@ class SQLSearchService:
         - Uses aggregate function to count questions per topic
         - GROUP BY to aggregate data
         """
-        query = self.db.query(
-            Topic.topic_id,
-            Topic.topic_name,
-            Topic.course_id,
-            Course.course_title,
-            func.count(Question.question_id).label('question_count')
-        ).join(
-            Course, Topic.course_id == Course.course_id
-        ).outerjoin(
-            Question, Topic.topic_id == Question.topic_id
-        ).group_by(
-            Topic.topic_id, Topic.topic_name, Topic.course_id, Course.course_title
+        query = (
+            self.db.query(
+                Topic.topic_id,
+                Topic.topic_name,
+                Topic.course_id,
+                Course.course_title,
+                func.count(Question.question_id).label("question_count"),
+            )
+            .join(Course, Topic.course_id == Course.course_id)
+            .outerjoin(Question, Topic.topic_id == Question.topic_id)
+            .group_by(Topic.topic_id, Topic.topic_name, Topic.course_id, Course.course_title)
         )
 
         # Apply filters
@@ -248,7 +241,7 @@ class SQLSearchService:
                 "topic_name": row.topic_name,
                 "course_id": row.course_id,
                 "course_title": row.course_title,
-                "question_count": row.question_count
+                "question_count": row.question_count,
             }
             for row in results
         ]

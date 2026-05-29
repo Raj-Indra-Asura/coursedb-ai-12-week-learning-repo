@@ -117,16 +117,12 @@ async def check_tables(db: Session = Depends(get_db)):
     - Confirm schema setup
     """
     try:
-        # Query PostgreSQL system catalog to list tables
-        query = text("""
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            ORDER BY table_name
-        """)
+        # Use SQLAlchemy's dialect-agnostic inspector so this works on both
+        # PostgreSQL (production) and SQLite (tests).
+        from sqlalchemy import inspect as sa_inspect
 
-        result = db.execute(query)
-        tables = [row[0] for row in result.fetchall()]
+        inspector = sa_inspect(db.bind)
+        tables = sorted(inspector.get_table_names())
 
         # Expected tables from models.py
         expected_tables = [
