@@ -57,8 +57,13 @@ Test files present (18):
 Lowest-covered modules (candidates for more tests, none below requirement
 overall):
 - `app/services/semantic_search_service.py` — 100% (unit-tested via mocked DB session)
-- `app/api/questions.py` — 50%
-- `app/api/resources.py` — 53%
+- `app/api/questions.py` — 85% (remaining: DB-error rollback handlers)
+- `app/api/resources.py` — 81% (remaining: DB-error rollback handlers)
+
+> **Bug fixed during coverage work:** `GET /api/resources?search=...` referenced
+> a non-existent `Resource.source_name` column and raised `AttributeError` at
+> runtime. Corrected to `Resource.author` (the real column) with a regression
+> test.
 
 ## Block-by-block status
 

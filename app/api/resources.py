@@ -31,7 +31,7 @@ async def list_resources(
     academic_year: int | None = Query(
         None, ge=2010, le=2030, description="Filter by academic year"
     ),
-    search: str | None = Query(None, description="Search in title or source_name"),
+    search: str | None = Query(None, description="Search in title or author"),
     db: Session = Depends(get_db),
 ):
     """
@@ -43,7 +43,7 @@ async def list_resources(
     - course_id: Filter by specific course
     - resource_type: Filter by resource type
     - academic_year: Filter by academic year
-    - search: Search in title or source_name
+    - search: Search in title or author
 
     Returns:
         List of resources matching filters
@@ -61,10 +61,10 @@ async def list_resources(
     if academic_year is not None:
         query = query.filter(Resource.year_published == academic_year)
     if search is not None:
-        # Case-insensitive search in title or source_name
+        # Case-insensitive search in title or author
         search_filter = f"%{search}%"
         query = query.filter(
-            (Resource.title.ilike(search_filter)) | (Resource.source_name.ilike(search_filter))
+            (Resource.title.ilike(search_filter)) | (Resource.author.ilike(search_filter))
         )
 
     resources = query.offset(skip).limit(limit).all()
