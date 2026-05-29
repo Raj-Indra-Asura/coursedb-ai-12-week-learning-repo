@@ -623,6 +623,10 @@ By Week 12, you should be able to:
 - **FastAPI Documentation**: https://fastapi.tiangolo.com/
 - **Sentence Transformers Documentation**: https://www.sbert.net/
 - **pgvector GitHub**: https://github.com/pgvector/pgvector
+- **[📘 Further Study appendix](docs/further_study.md)** — optional advanced /
+  operational topics not covered as graded weeks: backup & recovery (PITR),
+  replication / high availability, security depth (RBAC/RLS), partitioning &
+  sharding, monitoring & tuning, and distributed/NoSQL models.
 
 ---
 

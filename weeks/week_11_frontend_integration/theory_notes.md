@@ -363,7 +363,9 @@ st.title("⚙️ Admin Panel")
 # Authentication (simple version)
 password = st.text_input("Admin Password", type="password")
 
-if password == "admin123":  # TODO: Use proper auth
+if password == "admin123":  # ⚠️ INSECURE DEMO ONLY — never ship hardcoded
+                            # passwords. Use environment variables / a real
+                            # auth provider (e.g. OAuth) in production.
     st.success("Authenticated")
 
     # File upload
@@ -585,13 +587,17 @@ if st.button("Submit"):
 ```
 
 ### Exercise 2: API Integration
+
+> **TODO(learner):** Complete the search interface below. The `# TODO` lines
+> mark *your* tasks — implement the API call and result display yourself.
+
 ```python
-# TODO: Create search interface that calls CourseDB-AI API
+# Create a search interface that calls the CourseDB-AI API
 import streamlit as st
 import requests
 
 def search_questions(query):
-    # TODO: Implement API call
+    # TODO(learner): Implement the API call (use requests.get against /search)
     pass
 
 st.title("Question Search")
@@ -599,19 +605,23 @@ query = st.text_input("Enter search query")
 
 if st.button("Search"):
     results = search_questions(query)
-    # TODO: Display results
+    # TODO(learner): Display the results
 ```
 
 ### Exercise 3: Analytics Dashboard
+
+> **TODO(learner):** Build the dashboard below. Each `# TODO` line is a task
+> for you to complete.
+
 ```python
-# TODO: Create analytics dashboard with charts
+# Create an analytics dashboard with charts
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# TODO: Load data from API
-# TODO: Create 3 different visualizations
-# TODO: Add filters (year, difficulty, topic)
+# TODO(learner): Load data from the API
+# TODO(learner): Create 3 different visualizations
+# TODO(learner): Add filters (year, difficulty, topic)
 ```
 
 ---

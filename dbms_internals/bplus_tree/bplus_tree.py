@@ -25,13 +25,17 @@ Why B+ Trees for Databases?
 - All data at same depth (predictable performance)
 - High fanout reduces tree height
 
-TODO (Week 7):
-1. Implement Node class (internal and leaf)
-2. Implement insert operation
-3. Handle node splits
-4. Implement search operation
-5. Add visualization
-6. Test with keys: 10, 20, 5, 6, 12, 30, 7
+Reference implementation (Week 7):
+This module is a COMPLETE, working reference. It already implements:
+1. The Node class (internal and leaf)
+2. The insert operation
+3. Node splits
+4. The search operation
+5. Visualization
+
+Learner exercise (optional): Before reading the code, try implementing it
+yourself first, then compare with this reference. Test with keys:
+10, 20, 5, 6, 12, 30, 7.
 """
 
 from dataclasses import dataclass

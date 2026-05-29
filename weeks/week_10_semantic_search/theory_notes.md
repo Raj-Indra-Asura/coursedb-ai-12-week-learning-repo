@@ -469,10 +469,16 @@ LIMIT 5;
 ```
 
 ### Exercise 3: Chunking
+
+> **TODO(learner):** Implement `chunk_text_with_overlap` below. This is *your*
+> exercise — the body is intentionally left as `pass`. A complete reference
+> implementation already exists in `app/services/chunking_service.py`; try it
+> yourself first, then compare.
+
 ```python
 def chunk_text_with_overlap(text, chunk_size=200, overlap=50):
     """
-    TODO: Implement text chunking with overlap
+    Implement text chunking with overlap.
 
     Args:
         text: Input text to chunk

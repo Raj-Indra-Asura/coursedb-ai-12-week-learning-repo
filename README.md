@@ -412,6 +412,7 @@ By the end of this 12-week journey, I will be able to:
 - [AI_USAGE_RULES.md](AI_USAGE_RULES.md) - AI-assisted learning guidelines
 - [SECURITY.md](SECURITY.md) - Security best practices and vulnerability tracking
 - [docs/git_workflow/](docs/git_workflow/) - Git workflow and commit standards
+- [docs/further_study.md](docs/further_study.md) - Optional advanced/operational topics (backup & recovery, replication/HA, security depth, partitioning, monitoring)
 
 ---
 
@@ -465,6 +466,12 @@ state):
 - ✅ Alembic migrations reproduce the full schema from zero
 - ✅ FastAPI backend with CRUD, analytics, search, and DBMS-demo endpoints
 - ✅ Semantic-search pipeline (chunking → embeddings → pgvector) + smoke test
+  - ⚠️ **Embedding-model caveat**: when `sentence-transformers`/`torch` are not
+    installed, `scripts/generate_embeddings.py` (and the smoke test / evaluation
+    scripts) fall back to a **deterministic hashing encoder**. The pipeline runs
+    end-to-end, but **real semantic-search quality must be confirmed with an
+    actual model** installed locally or in CI. See
+    [VERIFICATION_REPORT.md](VERIFICATION_REPORT.md) for details.
 - ✅ Test suite passing with ≥ 70% coverage on `app/` and `dbms_internals/`
 - ✅ CI workflow (ruff, black, mypy, pytest, alembic upgrade)
 - ✅ Evaluation harness and auto-generated reference docs

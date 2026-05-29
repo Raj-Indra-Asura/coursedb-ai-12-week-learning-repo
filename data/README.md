@@ -29,18 +29,19 @@ Cleaned and structured data ready for database insertion
 ---
 
 ### `seed/`
-Sample data for database seeding
+Optional sample data files for database seeding.
+
+> **Note**: The default seed data used by `scripts/seed_data.py` is **defined
+> directly in the script** (hardcoded Python dictionaries), *not* loaded from
+> this directory. This folder is provided as an optional place to add your own
+> file-based seed datasets. If you add files here, you must extend
+> `scripts/seed_data.py` to read them — there is no automatic file loader yet.
+
+Suggested files if you build a file-based loader:
 - Small, curated datasets for testing
 - Representative examples of all entity types
-- Used by `scripts/seed_data.py`
 
-**Contents** (to be created):
-- `sample_courses.json`
-- `sample_topics.json`
-- `sample_questions.json`
-- `sample_resources.json`
-
-**Status**: To be created in Week 5-6
+**Status**: Empty by default; default seed data lives in `scripts/seed_data.py`.
 
 ---
 

@@ -21,11 +21,16 @@ T1 holds lock on X, waits for Y
 T2 holds lock on Y, waits for X
 → Cycle: T1 → T2 → T1 (DEADLOCK!)
 
-TODO (Week 9):
-1. Implement graph representation
-2. Implement cycle detection (DFS)
-3. Visualize wait-for graph
-4. Test with deadlock scenarios
+Reference implementation (Week 9):
+This module is a COMPLETE, working reference. It already implements:
+1. Graph representation
+2. Cycle detection (DFS)
+3. Wait-for graph visualization
+4. Deadlock scenario tests (see tests/)
+
+Learner exercise (optional): Before reading the code, try implementing
+detect_deadlock() and get_deadlock_cycle() yourself, then compare with this
+reference.
 """
 
 from collections import defaultdict
@@ -104,7 +109,8 @@ class WaitForGraph:
         Returns:
             True if deadlock exists, False otherwise
         """
-        # TODO (Week 9): Implement cycle detection
+        # Reference implementation (complete). Uses DFS with a recursion stack
+        # to detect a back edge, which indicates a cycle (deadlock).
         visited = set()
         rec_stack = set()
 
@@ -142,7 +148,8 @@ class WaitForGraph:
         Returns:
             List of transaction IDs in cycle, or None
         """
-        # TODO (Week 9): Implement cycle extraction
+        # Reference implementation (complete). Like detect_deadlock(), but
+        # records the DFS path so the actual cycle can be extracted.
         visited = set()
         rec_stack = []
 
