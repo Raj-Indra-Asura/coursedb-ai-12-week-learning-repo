@@ -10,6 +10,10 @@
 
 **[← Back to Week 1 Overview](README.md)** | **[Next: Exercises →](exercises.md)**
 
+> 📘 **New to databases?** Read the provided
+> [Week 1 Primer](primer.md) first — it explains every concept below so you have
+> something to write *from*, instead of facing blank prompts.
+
 ---
 
 ## 📝 My Understanding

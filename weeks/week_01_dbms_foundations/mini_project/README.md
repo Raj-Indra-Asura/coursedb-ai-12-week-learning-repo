@@ -2,6 +2,12 @@
 
 **Objective**: Build a simple Python program to store academic resources using only dictionaries and lists. Then document why this approach fails and why we need a DBMS.
 
+> 📘 If the concepts here are unfamiliar, read the
+> [Week 1 Primer](../primer.md) first. This mini-project is intentionally
+> learner-built — there is no reference solution, because the point is to feel
+> the limitations of file-based storage yourself. The starter structure and
+> testing scenarios below tell you exactly what to build and what to probe.
+
 ---
 
 ## 📋 Requirements

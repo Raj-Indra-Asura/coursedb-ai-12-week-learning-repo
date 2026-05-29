@@ -412,6 +412,7 @@ By the end of this 12-week journey, I will be able to:
 - [AI_USAGE_RULES.md](AI_USAGE_RULES.md) - AI-assisted learning guidelines
 - [SECURITY.md](SECURITY.md) - Security best practices and vulnerability tracking
 - [docs/git_workflow/](docs/git_workflow/) - Git workflow and commit standards
+- [docs/further_study.md](docs/further_study.md) - Optional advanced/operational topics (backup & recovery, replication/HA, security depth, partitioning, monitoring)
 
 ---
 

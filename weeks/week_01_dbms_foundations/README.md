@@ -7,7 +7,7 @@
 
 ## 🧭 Navigation
 
-**[← Back to START_HERE](../../START_HERE.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+**[← Back to START_HERE](../../START_HERE.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[📘 Read the Primer first →](primer.md)** | **[Next: Theory Notes →](theory_notes.md)**
 
 ---
 
