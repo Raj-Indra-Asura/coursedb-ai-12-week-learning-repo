@@ -172,6 +172,74 @@ def create_all_tables(db_engine):
         raise
 
 
+def recommend_ivfflat_lists(row_count: int) -> int:
+    """Return the recommended ``lists`` parameter for an IVFFlat index.
+
+    pgvector's guidance is ``rows / 1000`` for datasets up to ~1M rows and
+    ``sqrt(rows)`` beyond that, with a sensible lower bound.
+
+    Args:
+        row_count: Number of rows currently in ``chunk_embeddings``.
+
+    Returns:
+        Suggested number of IVFFlat lists (always >= 1).
+    """
+    if row_count <= 0:
+        return 1
+    if row_count <= 1_000_000:
+        return max(1, row_count // 1000)
+    return max(1, int(row_count**0.5))
+
+
+# Minimum number of embedding rows before an IVFFlat index is worthwhile. Below
+# this an exact (sequential) scan is faster and the index would be skipped.
+MIN_ROWS_FOR_IVFFLAT = 1000
+
+
+def create_vector_index(db_engine, lists: int = 100) -> None:
+    """Create the IVFFlat index on ``chunk_embeddings`` when it is worthwhile.
+
+    The index is only created once enough rows exist (``MIN_ROWS_FOR_IVFFLAT``);
+    building it on a tiny table provides no benefit and can even hurt recall. A
+    warning is emitted when the requested ``lists`` value is far from the value
+    recommended for the current row count.
+
+    Args:
+        db_engine: SQLAlchemy engine.
+        lists: Requested number of IVFFlat lists (clusters).
+    """
+    print("\n🔍 Evaluating pgvector IVFFlat index...")
+    with db_engine.connect() as conn:
+        row_count = conn.execute(text("SELECT count(*) FROM chunk_embeddings")).scalar() or 0
+
+        if row_count < MIN_ROWS_FOR_IVFFLAT:
+            print(
+                f"  ⏭️  Only {row_count} embedding rows (< {MIN_ROWS_FOR_IVFFLAT}). "
+                "Skipping IVFFlat index; an exact scan is faster at this size."
+            )
+            return
+
+        recommended = recommend_ivfflat_lists(row_count)
+        # Warn when the requested value is off by more than ~2x in either
+        # direction from the recommendation.
+        if lists < recommended / 2 or lists > recommended * 2:
+            print(
+                f"  ⚠️  lists={lists} looks off for {row_count} rows "
+                f"(recommended ~{recommended}). Consider rebuilding with the "
+                "recommended value for better speed/recall."
+            )
+
+        conn.execute(
+            text(
+                f"CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_vector "
+                f"ON chunk_embeddings USING ivfflat (embedding vector_cosine_ops) "
+                f"WITH (lists = {int(lists)})"
+            )
+        )
+        conn.commit()
+        print(f"  ✅ Created IVFFlat index (lists={int(lists)}) on {row_count} rows")
+
+
 def create_additional_indexes(db_engine):
     """
     Create additional indexes for query optimization
@@ -187,16 +255,6 @@ def create_additional_indexes(db_engine):
     print("\n🔍 Creating additional indexes...")
 
     indexes = [
-        # pgvector IVFFLAT index for fast similarity search
-        # Learning Note: IVFFLAT divides vectors into clusters for faster search
-        # lists=100: Number of clusters (good for ~10K-100K vectors)
-        # opclass: vector_cosine_ops for cosine distance
-        """
-        CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_vector
-        ON chunk_embeddings
-        USING ivfflat (embedding vector_cosine_ops)
-        WITH (lists = 100)
-        """,
         # Additional text search indexes
         """
         CREATE INDEX IF NOT EXISTS idx_questions_text_search
@@ -223,6 +281,10 @@ def create_additional_indexes(db_engine):
                     # Skip if index already exists or if there's an issue
                     if "already exists" not in str(e).lower():
                         print(f"  ⚠️  Index creation warning: {e}")
+
+        # The IVFFlat vector index is row-count sensitive, so it is handled
+        # separately and only created once enough embeddings exist.
+        create_vector_index(db_engine)
 
         print("  ✅ Additional indexes created successfully")
 

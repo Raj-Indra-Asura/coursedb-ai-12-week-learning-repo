@@ -107,10 +107,12 @@ def chunk_resource(
     # Create ResourceChunk objects
     chunks = []
     for chunk_dict in chunk_data:
+        chunk_text = chunk_dict["chunk_text"]
         chunk = ResourceChunk(
             resource_id=chunk_dict["resource_id"],
-            chunk_text=chunk_dict["chunk_text"],
-            chunk_order=chunk_dict["chunk_order"],
+            chunk_text=chunk_text,
+            chunk_index=chunk_dict["chunk_order"],
+            word_count=len(chunk_text.split()),
         )
         db.add(chunk)
         chunks.append(chunk)
