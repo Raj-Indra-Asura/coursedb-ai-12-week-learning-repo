@@ -56,7 +56,7 @@ Test files present (18):
 
 Lowest-covered modules (candidates for more tests, none below requirement
 overall):
-- `app/services/semantic_search_service.py` — 29% (vector paths need live pgvector)
+- `app/services/semantic_search_service.py` — 100% (unit-tested via mocked DB session)
 - `app/api/questions.py` — 50%
 - `app/api/resources.py` — 53%
 
@@ -125,7 +125,11 @@ Fully completed (auto-generated or maintainer-owned) docs:
    its first GitHub-hosted run should be checked; the `test` job installs a
    lightweight dependency subset (no torch) and relies on the embedding test
    being skipped when the model is uncached.
-3. **Vector-path coverage is low** (`semantic_search_service.py` 29%) because
-   `<=>` similarity needs a live pgvector instance; consider adding
-   `requires_pgvector`-marked tests in CI's `migrate` job.
+3. **Vector-path coverage** for `semantic_search_service.py` is now 100% via
+   mocked-DB unit tests covering `search`, `search_by_course`,
+   `compare_with_keyword_search`, `get_similar_chunks`, and `hybrid_search`
+   (result formatting, merging, and score normalization). The live `<=>`
+   similarity ordering still needs a real pgvector instance to validate;
+   consider adding `requires_pgvector`-marked integration tests in CI's
+   `migrate` job.
 4. **All learner-owned content above is pending** — by design, not a defect.
