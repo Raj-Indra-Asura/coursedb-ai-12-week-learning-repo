@@ -317,8 +317,8 @@ class LearningWeek(Base):
     __tablename__ = "learning_weeks"
 
     week_id = Column(Integer, primary_key=True, autoincrement=True)
-    week_number = Column(Integer, unique=True, nullable=False, index=True,
-                        CheckConstraint('week_number >= 1 AND week_number <= 12'))
+    week_number = Column(Integer, CheckConstraint('week_number >= 1 AND week_number <= 12'),
+                        unique=True, nullable=False, index=True)
     title = Column(String(200), nullable=False)
     description = Column(Text)
     directory_path = Column(String(500), nullable=False)
@@ -357,8 +357,9 @@ class LearningResource(Base):
     week_id = Column(Integer, ForeignKey('learning_weeks.week_id', ondelete='CASCADE'), nullable=False)
     title = Column(String(200), nullable=False, index=True)
     file_path = Column(String(500), nullable=False)
-    resource_type = Column(String(50), nullable=False,
-                          CheckConstraint("resource_type IN ('documentation', 'exercise', 'solution', 'notebook', 'code', 'reflection')"))
+    resource_type = Column(String(50),
+                          CheckConstraint("resource_type IN ('documentation', 'exercise', 'solution', 'notebook', 'code', 'reflection')"),
+                          nullable=False)
     description = Column(Text)
     order_index = Column(Integer, default=0)  # Order within week
     created_at = Column(DateTime(timezone=True), server_default=func.now())

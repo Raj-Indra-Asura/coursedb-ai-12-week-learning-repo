@@ -40,13 +40,24 @@ DATABASE_URL = os.getenv(
 # - pool_pre_ping=True: Verify connections before using (handle stale connections)
 # - pool_size=5: Number of connections to keep in pool
 # - max_overflow=10: Additional connections when pool is exhausted
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,  # Set to True to see SQL queries in console
-    pool_pre_ping=True,  # Verify connection health before use
-    pool_size=5,
-    max_overflow=10,
-)
+# Learning Note: SQLite (used in tests) does not support connection-pool
+# sizing arguments, so only apply them for server-based databases such as
+# PostgreSQL.
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,  # Set to True to see SQL queries in console
+        pool_pre_ping=True,  # Verify connection health before use
+        pool_size=5,
+        max_overflow=10,
+    )
 
 # Create SessionLocal class
 # Learning Note: Session Factory

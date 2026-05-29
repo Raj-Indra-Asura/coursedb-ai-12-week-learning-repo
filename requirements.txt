@@ -36,5 +36,6 @@ streamlit==1.28.2
 
 # Utilities
 pydantic==2.5.0
+email-validator>=2.0.0  # Required by pydantic EmailStr (User schema)
 python-multipart>=0.0.27  # Security: Patched multiple vulnerabilities including DoS and arbitrary file write
 requests==2.31.0

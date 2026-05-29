@@ -29,9 +29,12 @@ TODO (Week 10):
 5. Cache model in memory
 """
 
-from sentence_transformers import SentenceTransformer
+from typing import List
+import logging
+
 import numpy as np
-from typing import List, Union
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
@@ -48,12 +51,22 @@ class EmbeddingService:
         - Model is loaded once and cached in memory
         - Singleton pattern recommended for production use
         - First load downloads model (~80MB)
+        - ``sentence_transformers`` is imported lazily so that the rest of
+          the application (and the test-suite) can import this module without
+          requiring the heavy ML stack to be installed.
         """
         self.model_name = model_name
-        print(f"Loading embedding model: {model_name}...")
+        logger.info("Loading embedding model: %s ...", model_name)
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:  # pragma: no cover - depends on optional dep
+            raise ImportError(
+                "sentence-transformers is required to use EmbeddingService. "
+                "Install it with `pip install sentence-transformers`."
+            ) from exc
         self.model = SentenceTransformer(model_name)
         self.model.max_seq_length = 512  # Allow longer sequences
-        print(f"✅ Model loaded. Embedding dimension: {self.get_embedding_dimension()}")
+        logger.info("Model loaded. Embedding dimension: %d", self.get_embedding_dimension())
 
     def get_embedding_dimension(self) -> int:
         """Get the dimension of embeddings produced by this model"""
