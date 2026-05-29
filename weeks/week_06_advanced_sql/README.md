@@ -3,6 +3,10 @@
 **Duration**: 7 days
 **Status**: 🔄 Ready to Start
 
+## 🧭 Navigation
+
+**[← Previous: Week 5](../week_05_postgresql_fastapi/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
 ---
 
 ## 🎯 Why This Week Matters
@@ -510,3 +514,22 @@ Week 6 enhances your CourseDB-AI backend with:
 ---
 
 **Next Week**: Week 7 - Indexing (B+ Tree, Hash Index) - Optimize query performance!
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 5](../week_05_postgresql_fastapi/reflection.md)** | **[Back to Week 6 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 6 File Sequence
+
+1. **[Week 6 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 7](../week_07_indexing_bplus/README.md)** - Continue journey

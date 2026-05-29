@@ -1,5 +1,11 @@
 # Week 11: Frontend Integration with Streamlit
 
+## 🧭 Navigation
+
+**[← Previous: Week 10](../week_10_semantic_search/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 📋 Overview
 
 Week 11 brings CourseDB-AI to life with a user-friendly frontend using **Streamlit**. You'll build interactive pages for searching questions, viewing analytics, and managing course content - all in pure Python!
@@ -727,3 +733,22 @@ streamlit run Home.py
 - [Streamlit Documentation](https://docs.streamlit.io)
 - [Streamlit Gallery](https://streamlit.io/gallery)
 - [Streamlit Community](https://discuss.streamlit.io)
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 10](../week_10_semantic_search/reflection.md)** | **[Back to Week 11 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 11 File Sequence
+
+1. **[Week 11 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 12](../week_12_evaluation_portfolio/README.md)** - Continue journey

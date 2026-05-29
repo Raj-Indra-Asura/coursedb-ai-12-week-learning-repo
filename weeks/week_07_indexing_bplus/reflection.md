@@ -1,5 +1,11 @@
 # Week 7: Indexing & B+ Trees - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 7 Overview](README.md)** | **[Next: Week 8 →](../week_08_query_optimization/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 Week 7 taught you to transform slow databases into fast ones using indexes. These reflections help you:
@@ -627,3 +633,9 @@ Based on your reflections, create concrete action items:
 2. Verify all checkpoints
 3. Review mistakes_to_expect.md
 4. Prepare for Week 8: Query Optimization!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 7 Overview](README.md)** | **[🎉 Start Week 8 →](../week_08_query_optimization/README.md)**

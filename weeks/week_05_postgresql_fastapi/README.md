@@ -3,6 +3,10 @@
 **Duration**: 7 days
 **Status**: 🔄 Ready to Start
 
+## 🧭 Navigation
+
+**[← Previous: Week 4](../week_04_normalization/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
 ---
 
 ## 🎯 Why This Week Matters
@@ -580,6 +584,25 @@ You've successfully completed Week 5 if you can:
 **Ready to begin?** Start with Day 1 in `implementation_plan.md`!
 
 **Questions?** Review `theory_notes.md` and `mistakes_to_expect.md`
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 4](../week_04_normalization/reflection.md)** | **[Back to Week 5 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 5 File Sequence
+
+1. **[Week 5 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 6](../week_06_advanced_sql/README.md)** - Continue journey
 
 ---
 

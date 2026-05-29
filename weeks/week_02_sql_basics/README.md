@@ -5,6 +5,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Previous: Week 1](../week_01_dbms_foundations/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 🎯 Why This Week Matters
 
 After Week 1's frustrating experience with file-based storage, this week introduces **SQL** - a declarative language that elegantly solves most of the problems you encountered. You'll experience the power of:
@@ -358,3 +364,26 @@ Test your understanding before moving to Week 3:
 - Learn cardinality and relationship types
 - Map ER diagrams to SQL tables
 - Plan before implementing!
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 1](../week_01_dbms_foundations/reflection.md)** | **[Back to Week 2 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 2 File Sequence
+
+1. **[Week 2 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - SQL fundamentals
+3. **[Exercises](exercises.md)** - SQL practice problems
+4. **[Implementation Plan](implementation_plan.md)** - Build with SQL
+5. **[Schema Week 2](schema_week2.sql)** - Database schema
+6. **[Seed Data](seed_week2.sql)** - Sample data
+7. **[Practice Queries](queries_week2.sql)** - 20+ SQL queries
+8. **[Checkpoints](checkpoints.md)** - Progress tracking
+9. **[Mistakes to Expect](mistakes_to_expect.md)** - Common SQL errors
+10. **[Reflection](reflection.md)** - Weekly reflection
+11. **[→ Week 3: ER Modeling](../week_03_er_modeling/README.md)** - Continue journey
+

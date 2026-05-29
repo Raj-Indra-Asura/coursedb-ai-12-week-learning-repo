@@ -1,5 +1,11 @@
 # Week 9: Transactions & Concurrency Control
 
+## 🧭 Navigation
+
+**[← Previous: Week 8](../week_08_query_optimization/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 📋 Overview
 
 Week 9 focuses on **transactions** and **concurrency control** - critical concepts for building reliable multi-user database applications. You'll learn how databases ensure data consistency when multiple users access data simultaneously, and how to handle the inevitable conflicts that arise.
@@ -757,3 +763,22 @@ SELECT pg_terminate_backend(blocking_pid);
 - [SQLAlchemy Transactions](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html)
 - [ACID Properties Explained](https://en.wikipedia.org/wiki/ACID)
 - [Two-Phase Locking](https://en.wikipedia.org/wiki/Two-phase_locking)
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 8](../week_08_query_optimization/reflection.md)** | **[Back to Week 9 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 9 File Sequence
+
+1. **[Week 9 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 10](../week_10_semantic_search/README.md)** - Continue journey

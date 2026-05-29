@@ -4,6 +4,12 @@ Complete these reflection prompts after finishing Week 2's implementation. Be ho
 
 ---
 
+## 🧭 Navigation
+
+**[← Back to Week 2 Overview](README.md)** | **[Next: Week 3 →](../week_03_er_modeling/README.md)**
+
+---
+
 ## 📊 Comparison: Week 1 vs Week 2
 
 ### 1. Code Complexity Comparison
@@ -297,3 +303,10 @@ Write 2-3 sentences about what you'll focus on in Week 3 (ER Modeling).
 **Completed on**: ___________
 
 **Ready for Week 3?** ☐ Yes ☐ Need more practice
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 2 Overview](README.md)** | **[🎉 Start Week 3 →](../week_03_er_modeling/README.md)**
+

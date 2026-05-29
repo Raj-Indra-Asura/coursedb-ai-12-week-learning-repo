@@ -1,5 +1,11 @@
 # Week 8: Query Optimization & Performance Tuning - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 8 Overview](README.md)** | **[Next: Week 9 →](../week_09_transactions/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 Week 8 taught you systematic query optimization - the skill that separates good developers from great ones. These reflections help you:
@@ -612,3 +618,9 @@ Based on your reflections, create concrete action items:
 2. Verify all checkpoints
 3. Review mistakes_to_expect.md
 4. Prepare for Week 9: Transactions & ACID!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 8 Overview](README.md)** | **[🎉 Start Week 9 →](../week_09_transactions/README.md)**

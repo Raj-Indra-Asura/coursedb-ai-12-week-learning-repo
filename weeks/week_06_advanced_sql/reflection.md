@@ -1,5 +1,11 @@
 # Week 6: Advanced SQL - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 6 Overview](README.md)** | **[Next: Week 7 →](../week_07_indexing_bplus/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 Week 6 introduced powerful database features that move beyond basic CRUD operations. These reflections help you:
@@ -692,3 +698,9 @@ Based on your reflections, create concrete action items:
 2. Review mistakes_to_expect.md
 3. Verify checkpoints.md completion
 4. Move to Week 7: Indexing!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 6 Overview](README.md)** | **[🎉 Start Week 7 →](../week_07_indexing_bplus/README.md)**

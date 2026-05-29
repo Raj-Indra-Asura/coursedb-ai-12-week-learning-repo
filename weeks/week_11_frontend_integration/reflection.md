@@ -1,5 +1,11 @@
 # Week 11: Frontend Integration - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 11 Overview](README.md)** | **[Next: Week 12 →](../week_12_evaluation_portfolio/README.md)**
+
+---
+
 ## 📝 Deep Learning Reflections
 
 ---
@@ -145,3 +151,9 @@ _________________________________________________________________
 ---
 
 **Remember:** Great UIs make technology accessible. Streamlit democratizes app building!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 11 Overview](README.md)** | **[🎉 Start Week 12 →](../week_12_evaluation_portfolio/README.md)**

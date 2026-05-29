@@ -1,5 +1,11 @@
 # Week 5: PostgreSQL + FastAPI - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 5 Overview](README.md)** | **[Next: Week 6 →](../week_06_advanced_sql/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 Week 5 marks the transition from database theory to backend implementation. These reflections help you process the shift from conceptual design to working code.
@@ -331,3 +337,9 @@ Next learning goals:
 ---
 
 **Next Steps:** Complete all deliverables and move to Week 6!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 5 Overview](README.md)** | **[🎉 Start Week 6 →](../week_06_advanced_sql/README.md)**

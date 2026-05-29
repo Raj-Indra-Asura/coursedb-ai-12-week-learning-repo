@@ -1,5 +1,11 @@
 # Week 8: Query Optimization & Performance Tuning
 
+## 🧭 Navigation
+
+**[← Previous: Week 7](../week_07_indexing_bplus/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 🎯 Learning Objectives
 
 By the end of this week, you will:
@@ -913,3 +919,22 @@ courses = db.query(Course).options(
 ---
 
 **Ready to make your queries fly? Let's optimize! 🚀**
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 7](../week_07_indexing_bplus/reflection.md)** | **[Back to Week 8 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 8 File Sequence
+
+1. **[Week 8 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 9](../week_09_transactions/README.md)** - Continue journey

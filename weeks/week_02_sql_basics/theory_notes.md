@@ -1,8 +1,14 @@
 # Week 2: SQL Basics - Theory Notes
 
+## 🧭 Navigation
+
+**[← Back to Week 2 Overview](README.md)** | **[Next: Exercises →](exercises.md)**
+
+---
+
 ## 📚 Core Concepts
 
-### 1. Relational Model Basics
+###1. Relational Model Basics
 
 **What is the Relational Model?**
 - Data organized in **tables (relations)**
@@ -121,3 +127,10 @@ SELECT year, difficulty, COUNT(*) FROM questions GROUP BY year, difficulty;
 ---
 
 **Next Steps:** Complete the 20 queries in `queries_week2.sql` and exercises!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 2 Overview](README.md)** | **[Next: Exercises →](exercises.md)**
+
