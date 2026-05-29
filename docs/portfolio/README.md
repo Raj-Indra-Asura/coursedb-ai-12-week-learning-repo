@@ -6,9 +6,12 @@ This directory contains portfolio-ready documentation for CourseDB-AI.
 
 ---
 
-## 📁 Files to Create
+## 📁 Files in This Directory
 
-### `portfolio_case_study.md` (Week 12)
+Starter templates already exist for the deliverables below — open each file and
+fill in the `TODO(learner)` sections.
+
+### `portfolio_case_study.md` ✅ template provided
 Complete technical case study including:
 1. Background and motivation
 2. Problem statement
@@ -24,7 +27,7 @@ Complete technical case study including:
 12. Future improvements
 13. Connection to AI/ML engineering
 
-### `demo_script.md` (Week 12)
+### `demo_script.md` ✅ template provided
 3-5 minute demo script:
 1. Introduction
 2. Problem demonstration
@@ -36,14 +39,14 @@ Complete technical case study including:
 8. What I learned
 9. Future work
 
-### `final_project_summary.md` (Week 12)
+### `final_project_summary.md` ✅ template provided
 Executive summary:
 - One-paragraph pitch
 - Key technical achievements
 - Technologies used
 - Portfolio positioning
 
-### `talking_points.md` (Week 12)
+### `talking_points.md` ✅ template provided
 Interview talking points:
 - "Hybrid SQL + vector search system"
 - "Deep dive into database internals"
@@ -64,4 +67,4 @@ Interview talking points:
 
 ---
 
-**TODO (Week 12)**: Create polished portfolio documentation
+**TODO(learner) (Week 12)**: Fill in the starter templates above with your own polished portfolio documentation.

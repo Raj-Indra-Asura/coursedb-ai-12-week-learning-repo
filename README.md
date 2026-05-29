@@ -465,6 +465,12 @@ state):
 - ✅ Alembic migrations reproduce the full schema from zero
 - ✅ FastAPI backend with CRUD, analytics, search, and DBMS-demo endpoints
 - ✅ Semantic-search pipeline (chunking → embeddings → pgvector) + smoke test
+  - ⚠️ **Embedding-model caveat**: when `sentence-transformers`/`torch` are not
+    installed, `scripts/generate_embeddings.py` (and the smoke test / evaluation
+    scripts) fall back to a **deterministic hashing encoder**. The pipeline runs
+    end-to-end, but **real semantic-search quality must be confirmed with an
+    actual model** installed locally or in CI. See
+    [VERIFICATION_REPORT.md](VERIFICATION_REPORT.md) for details.
 - ✅ Test suite passing with ≥ 70% coverage on `app/` and `dbms_internals/`
 - ✅ CI workflow (ruff, black, mypy, pytest, alembic upgrade)
 - ✅ Evaluation harness and auto-generated reference docs
