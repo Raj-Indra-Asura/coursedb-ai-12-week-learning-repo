@@ -1,10 +1,14 @@
-# Week 2: SQL Exercises
+# Week 2: SQL Exercises (Filled Answer Key)
 
 ## 🧭 Navigation
 
-**[← Back to Week 2 Overview](README.md)** | **[Theory Notes](theory_notes.md)** | **[Next: Week 3 →](../week_03_er_modeling/README.md)**
+**[← Back to Week 2 Overview](README.md)** | **[Theory Notes](theory_notes.md)** | **[Blank Practice Variant](exercises_blank.md)** | **[Next: Week 3 →](../week_03_er_modeling/README.md)**
 
 ---
+
+> **This is the filled answer key.** To practice from scratch first, use the
+> learner-blank variant in **[exercises_blank.md](exercises_blank.md)** (same
+> prompts, empty answer spaces), then return here to self-check.
 
 ## 🎯 Exercise Goals
 

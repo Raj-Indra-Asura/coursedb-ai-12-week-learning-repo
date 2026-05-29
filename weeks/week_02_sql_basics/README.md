@@ -377,13 +377,14 @@ Test your understanding before moving to Week 3:
 
 1. **[Week 2 README](README.md)** ← You are here
 2. **[Theory Notes](theory_notes.md)** - SQL fundamentals
-3. **[Exercises](exercises.md)** - SQL practice problems
-4. **[Implementation Plan](implementation_plan.md)** - Build with SQL
-5. **[Schema Week 2](schema_week2.sql)** - Database schema
-6. **[Seed Data](seed_week2.sql)** - Sample data
-7. **[Practice Queries](queries_week2.sql)** - 20+ SQL queries
-8. **[Checkpoints](checkpoints.md)** - Progress tracking
-9. **[Mistakes to Expect](mistakes_to_expect.md)** - Common SQL errors
-10. **[Reflection](reflection.md)** - Weekly reflection
-11. **[→ Week 3: ER Modeling](../week_03_er_modeling/README.md)** - Continue journey
+3. **[Exercises](exercises.md)** - SQL practice problems (filled answer key)
+4. **[Exercises — Blank Practice Variant](exercises_blank.md)** - Same prompts, empty answer spaces
+5. **[Implementation Plan](implementation_plan.md)** - Build with SQL
+6. **[Schema Week 2](schema_week2.sql)** - Database schema
+7. **[Seed Data](seed_week2.sql)** - Sample data
+8. **[Practice Queries](queries_week2.sql)** - 20+ SQL queries
+9. **[Checkpoints](checkpoints.md)** - Progress tracking
+10. **[Mistakes to Expect](mistakes_to_expect.md)** - Common SQL errors
+11. **[Reflection](reflection.md)** - Weekly reflection
+12. **[→ Week 3: ER Modeling](../week_03_er_modeling/README.md)** - Continue journey
 
