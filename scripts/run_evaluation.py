@@ -1,614 +1,292 @@
+"""Evaluation harness for CourseDB-AI (Week 12).
+
+This script ties together three forms of evaluation required by the project:
+
+1. **SQL smoke check** — every statement in
+   ``weeks/week_02_sql_basics/queries_week2.sql`` is executed and checked for
+   errors / row counts.
+2. **Query-plan capture** — ``EXPLAIN ANALYZE`` is run on five representative
+   queries with and without the optional indexes, writing the plans to
+   ``dbms_internals/query_plan/outputs/before_indexes.txt`` and
+   ``after_indexes.txt``.
+3. **Semantic-search evaluation** — the ten queries in
+   ``data/evaluation/eval_queries.json`` are run through pgvector and a results
+   table is written to ``docs/evaluation/semantic_search_results.md`` for the
+   learner to score against ``docs/evaluation/rubric.md``.
+
+Embeddings use :class:`app.services.embedding_service.EmbeddingService` when the
+ML stack is installed, and fall back to a deterministic offline hashing encoder
+otherwise (see :func:`get_encoder`).
+
+Usage::
+
+    python scripts/run_evaluation.py              # run everything
+    python scripts/run_evaluation.py --sql        # only the SQL smoke check
+    python scripts/run_evaluation.py --plans      # only EXPLAIN ANALYZE capture
+    python scripts/run_evaluation.py --semantic   # only semantic evaluation
+
+A PostgreSQL database with the ``vector`` extension is required for the plan and
+semantic stages; set ``DATABASE_URL`` accordingly.
 """
-Evaluation Script
 
-Week 12: Evaluation, Polish, Portfolio
-
-Evaluates CourseDB-AI system performance:
-- Semantic search quality (precision, recall, relevance)
-- Search comparison (semantic vs keyword vs hybrid)
-- Query performance metrics (latency, throughput)
-- System behavior under load
-- Embedding quality assessment
-
-Usage:
-    python scripts/run_evaluation.py [--full] [--output report.json]
-
-Options:
-    --full: Run comprehensive evaluation (takes longer)
-    --output: Save evaluation report to file (JSON format)
-    --skip-performance: Skip performance benchmarks
-    --skip-quality: Skip quality evaluation
-
-Learning Objectives:
-- Understand information retrieval metrics
-- Learn A/B testing methodology
-- Practice performance benchmarking
-- Evaluate embedding quality
-"""
+from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import logging
 import os
+import re
 import sys
-import time
-from datetime import datetime
-from typing import Any
+from pathlib import Path
 
-# Add parent directory to path to import app modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import numpy as np
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db.database import SessionLocal
-from app.db.models import ChunkEmbedding, Question, Resource, ResourceChunk
-from app.services.semantic_search_service import SemanticSearchService
 
-# ==========================================
-# Evaluation Test Queries
-# ==========================================
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger("run_evaluation")
 
-# Test queries with expected relevant results
-EVALUATION_QUERIES = [
-    {
-        "query": "SQL joins and query optimization",
-        "expected_topics": ["SQL Basics", "Query Processing"],
-        "expected_keywords": ["join", "query", "optimization"],
-    },
-    {
-        "query": "database transactions and ACID properties",
-        "expected_topics": ["Transactions"],
-        "expected_keywords": ["transaction", "acid", "atomicity", "consistency"],
-    },
-    {
-        "query": "B-tree indexing structures",
-        "expected_topics": ["Indexing"],
-        "expected_keywords": ["b-tree", "b+tree", "index"],
-    },
-    {
-        "query": "machine learning classification algorithms",
-        "expected_topics": ["Machine Learning Basics"],
-        "expected_keywords": ["machine learning", "classification", "supervised"],
-    },
-    {
-        "query": "neural networks backpropagation",
-        "expected_topics": ["Neural Networks"],
-        "expected_keywords": ["neural", "network", "backpropagation"],
-    },
-    {
-        "query": "web authentication JWT tokens",
-        "expected_topics": ["Authentication"],
-        "expected_keywords": ["jwt", "token", "authentication"],
-    },
-    {
-        "query": "normalization and functional dependencies",
-        "expected_topics": ["Normalization"],
-        "expected_keywords": ["normalization", "functional", "dependency", "3nf"],
-    },
-    {
-        "query": "search algorithms BFS DFS",
-        "expected_topics": ["Search Algorithms"],
-        "expected_keywords": ["search", "bfs", "dfs", "algorithm"],
-    },
-]
+REPO_ROOT = Path(__file__).resolve().parents[1]
+WEEK2_SQL = REPO_ROOT / "weeks" / "week_02_sql_basics" / "queries_week2.sql"
+EVAL_QUERIES = REPO_ROOT / "data" / "evaluation" / "eval_queries.json"
+PLAN_OUTPUT_DIR = REPO_ROOT / "dbms_internals" / "query_plan" / "outputs"
+SEMANTIC_RESULTS = REPO_ROOT / "docs" / "evaluation" / "semantic_search_results.md"
 
-PERFORMANCE_QUERIES = [
-    "What is normalization?",
-    "Explain ACID properties",
-    "How do indexes work?",
-    "What are neural networks?",
-    "Describe transactions",
-    "SQL join types",
-    "Machine learning basics",
-    "Web development authentication",
+_EMBEDDING_DIM = 384
+
+# Optional indexes toggled for the before/after EXPLAIN ANALYZE comparison.
+_OPTIONAL_INDEXES: dict[str, str] = {
+    "idx_eval_questions_year": "CREATE INDEX idx_eval_questions_year ON questions (year)",
+    "idx_eval_questions_difficulty": (
+        "CREATE INDEX idx_eval_questions_difficulty ON questions (difficulty)"
+    ),
+    "idx_eval_resources_year": (
+        "CREATE INDEX idx_eval_resources_year ON resources (year_published)"
+    ),
+}
+
+# Five representative queries for plan analysis.
+_PLAN_QUERIES: list[tuple[str, str]] = [
+    ("questions_by_year", "SELECT * FROM questions WHERE year = 2023"),
+    ("hard_questions", "SELECT * FROM questions WHERE difficulty = 'hard'"),
+    (
+        "questions_join_topics",
+        "SELECT q.question_text, t.topic_name FROM questions q "
+        "JOIN topics t ON t.topic_id = q.topic_id",
+    ),
+    (
+        "questions_per_topic",
+        "SELECT topic_id, count(*) FROM questions GROUP BY topic_id",
+    ),
+    (
+        "resources_by_year",
+        "SELECT * FROM resources WHERE year_published >= 2022 ORDER BY year_published DESC",
+    ),
 ]
 
 
-# ==========================================
-# Evaluation Functions
-# ==========================================
+class HashingEncoder:
+    """Deterministic offline fallback encoder (hashing trick, L2-normalised).
 
-
-def calculate_precision_recall(
-    results: list[dict], expected_topics: list[str], expected_keywords: list[str]
-) -> dict[str, float]:
+    Uses a stable hash (``hashlib``) rather than the builtin ``hash`` so that
+    vectors are identical across separate processes — essential because chunks
+    are embedded by one run and queried by another.
     """
-    Calculate precision and recall for search results
 
-    Learning Objectives (Week 12):
-    - Understand information retrieval metrics
-    - Learn precision = relevant_retrieved / total_retrieved
-    - Learn recall = relevant_retrieved / total_relevant
+    def __init__(self, dim: int = _EMBEDDING_DIM) -> None:
+        self.dim = dim
+
+    def _bucket(self, token: str) -> int:
+        digest = hashlib.md5(token.encode("utf-8")).hexdigest()
+        return int(digest, 16) % self.dim
+
+    def encode_for_search(self, text_value: str) -> list[float]:
+        vector = np.zeros(self.dim, dtype=np.float32)
+        for token in re.findall(r"[a-z0-9+]+", text_value.lower()):
+            vector[self._bucket(token)] += 1.0
+        norm = np.linalg.norm(vector)
+        if norm > 0:
+            vector /= norm
+        return vector.tolist()
+
+
+def get_encoder():
+    """Return the real embedding service when available, else the fallback."""
+    try:
+        from app.services.embedding_service import EmbeddingService
+
+        logger.info("Using EmbeddingService (Sentence Transformers).")
+        return EmbeddingService()
+    except Exception as exc:  # noqa: BLE001 - any failure means fall back
+        logger.info("Falling back to deterministic hashing encoder (%s).", exc)
+        return HashingEncoder()
+
+
+def _require_postgres(db: Session) -> None:
+    dialect = db.bind.dialect.name
+    if dialect != "postgresql":
+        raise RuntimeError(
+            f"This stage requires PostgreSQL with pgvector, but DATABASE_URL "
+            f"points at a '{dialect}' database."
+        )
+
+
+def parse_sql_statements(sql_path: Path) -> list[str]:
+    """Split a ``.sql`` file into individual executable statements.
+
+    Line comments (``-- ...``) are stripped; statements are separated by
+    semicolons.
 
     Args:
-        results: Search results
-        expected_topics: Expected relevant topics
-        expected_keywords: Expected relevant keywords
+        sql_path: Path to the SQL file.
 
     Returns:
-        Dictionary with precision, recall, f1_score
+        A list of non-empty SQL statements (without trailing semicolons).
     """
-    if not results:
-        return {"precision": 0.0, "recall": 0.0, "f1_score": 0.0}
-
-    # Check relevance based on topics and keywords
-    relevant_count = 0
-
-    for result in results:
-        # Check if result matches expected topics or keywords
-        result_text = (
-            result.get("chunk_text", "")
-            + " "
-            + result.get("resource_title", "")
-            + " "
-            + str(result.get("metadata", {}))
-        ).lower()
-
-        # Check if any expected topic or keyword is present
-        is_relevant = False
-
-        for topic in expected_topics:
-            if topic.lower() in result_text:
-                is_relevant = True
-                break
-
-        if not is_relevant:
-            for keyword in expected_keywords:
-                if keyword.lower() in result_text:
-                    is_relevant = True
-                    break
-
-        if is_relevant:
-            relevant_count += 1
-
-    # Calculate metrics
-    total_retrieved = len(results)
-    total_relevant = len(expected_topics) + len(expected_keywords)
-
-    precision = relevant_count / total_retrieved if total_retrieved > 0 else 0.0
-    recall = relevant_count / total_relevant if total_relevant > 0 else 0.0
-    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
-
-    return {
-        "precision": round(precision, 3),
-        "recall": round(recall, 3),
-        "f1_score": round(f1_score, 3),
-        "relevant_count": relevant_count,
-        "total_retrieved": total_retrieved,
-    }
+    raw = sql_path.read_text(encoding="utf-8")
+    no_comments = "\n".join(line.split("--", 1)[0] for line in raw.splitlines())
+    statements = [stmt.strip() for stmt in no_comments.split(";")]
+    return [stmt for stmt in statements if stmt]
 
 
-def evaluate_search_quality(db: Session) -> dict[str, Any]:
-    """
-    Evaluate semantic search quality
-
-    Learning Objectives (Week 12):
-    - Compare different search methods
-    - Measure relevance and accuracy
-    - Analyze result quality
+def run_week2_sql(db: Session) -> list[dict]:
+    """Execute every Week 2 query and record success / row counts.
 
     Args:
-        db: Database session
+        db: Active database session.
 
     Returns:
-        Dictionary with quality metrics
+        One result dict per statement with keys ``index``, ``ok``,
+        ``rows``/``error``.
     """
-    print("\n🔍 Evaluating Search Quality...")
-
-    semantic_service = SemanticSearchService(db)
-
-    results = {"semantic_search": [], "hybrid_search": [], "average_metrics": {}}
-
-    for query_data in EVALUATION_QUERIES:
-        query = query_data["query"]
-        expected_topics = query_data["expected_topics"]
-        expected_keywords = query_data["expected_keywords"]
-
-        print(f"\n  Testing query: '{query}'")
-
+    logger.info("\n=== Week 2 SQL smoke check (%s) ===", WEEK2_SQL.name)
+    statements = parse_sql_statements(WEEK2_SQL)
+    results: list[dict] = []
+    for i, stmt in enumerate(statements, start=1):
         try:
-            # Test semantic search
-            semantic_results = semantic_service.search(query, top_k=5, similarity_threshold=0.3)
-            semantic_metrics = calculate_precision_recall(
-                semantic_results, expected_topics, expected_keywords
-            )
-
-            # Test hybrid search
-            hybrid_results = semantic_service.hybrid_search(query, top_k=5, semantic_weight=0.7)
-            hybrid_metrics = calculate_precision_recall(
-                hybrid_results, expected_topics, expected_keywords
-            )
-
-            results["semantic_search"].append(
-                {
-                    "query": query,
-                    "results_count": len(semantic_results),
-                    "metrics": semantic_metrics,
-                }
-            )
-
-            results["hybrid_search"].append(
-                {"query": query, "results_count": len(hybrid_results), "metrics": hybrid_metrics}
-            )
-
-            print(
-                f"    Semantic - Precision: {semantic_metrics['precision']:.3f}, Recall: {semantic_metrics['recall']:.3f}"
-            )
-            print(
-                f"    Hybrid   - Precision: {hybrid_metrics['precision']:.3f}, Recall: {hybrid_metrics['recall']:.3f}"
-            )
-
-        except Exception as e:
-            print(f"    ❌ Error: {e}")
-
-    # Calculate average metrics
-    if results["semantic_search"]:
-        semantic_avg_precision = sum(
-            r["metrics"]["precision"] for r in results["semantic_search"]
-        ) / len(results["semantic_search"])
-        semantic_avg_recall = sum(r["metrics"]["recall"] for r in results["semantic_search"]) / len(
-            results["semantic_search"]
-        )
-        semantic_avg_f1 = sum(r["metrics"]["f1_score"] for r in results["semantic_search"]) / len(
-            results["semantic_search"]
-        )
-
-        hybrid_avg_precision = sum(
-            r["metrics"]["precision"] for r in results["hybrid_search"]
-        ) / len(results["hybrid_search"])
-        hybrid_avg_recall = sum(r["metrics"]["recall"] for r in results["hybrid_search"]) / len(
-            results["hybrid_search"]
-        )
-        hybrid_avg_f1 = sum(r["metrics"]["f1_score"] for r in results["hybrid_search"]) / len(
-            results["hybrid_search"]
-        )
-
-        results["average_metrics"] = {
-            "semantic": {
-                "precision": round(semantic_avg_precision, 3),
-                "recall": round(semantic_avg_recall, 3),
-                "f1_score": round(semantic_avg_f1, 3),
-            },
-            "hybrid": {
-                "precision": round(hybrid_avg_precision, 3),
-                "recall": round(hybrid_avg_recall, 3),
-                "f1_score": round(hybrid_avg_f1, 3),
-            },
-        }
-
-    print("\n  ✅ Search quality evaluation complete")
-
+            rows = db.execute(text(stmt)).fetchall()
+            results.append({"index": i, "ok": True, "rows": len(rows)})
+            logger.info("  [ok]   query %2d -> %d row(s)", i, len(rows))
+        except Exception as exc:  # noqa: BLE001 - report and continue
+            db.rollback()
+            results.append({"index": i, "ok": False, "error": str(exc).splitlines()[0]})
+            logger.error("  [FAIL] query %2d -> %s", i, str(exc).splitlines()[0])
+    passed = sum(1 for r in results if r["ok"])
+    logger.info("Week 2 SQL: %d/%d statements succeeded.", passed, len(results))
     return results
 
 
-def evaluate_performance(db: Session) -> dict[str, Any]:
-    """
-    Evaluate search performance (latency, throughput)
-
-    Learning Objectives (Week 12):
-    - Measure query latency
-    - Calculate throughput (queries per second)
-    - Compare performance across methods
-
-    Args:
-        db: Database session
-
-    Returns:
-        Dictionary with performance metrics
-    """
-    print("\n⚡ Evaluating Search Performance...")
-
-    semantic_service = SemanticSearchService(db)
-
-    results = {
-        "semantic_search": {
-            "latencies": [],
-            "avg_latency_ms": 0,
-            "min_latency_ms": 0,
-            "max_latency_ms": 0,
-            "throughput_qps": 0,
-        },
-        "hybrid_search": {
-            "latencies": [],
-            "avg_latency_ms": 0,
-            "min_latency_ms": 0,
-            "max_latency_ms": 0,
-            "throughput_qps": 0,
-        },
-    }
-
-    # Test semantic search performance
-    print("\n  Testing semantic search performance...")
-    for query in PERFORMANCE_QUERIES:
-        start_time = time.time()
-        try:
-            semantic_service.search(query, top_k=5)
-        except Exception:
-            pass
-        latency_ms = (time.time() - start_time) * 1000
-        results["semantic_search"]["latencies"].append(latency_ms)
-
-    # Calculate semantic search metrics
-    latencies = results["semantic_search"]["latencies"]
-    if latencies:
-        results["semantic_search"]["avg_latency_ms"] = round(sum(latencies) / len(latencies), 2)
-        results["semantic_search"]["min_latency_ms"] = round(min(latencies), 2)
-        results["semantic_search"]["max_latency_ms"] = round(max(latencies), 2)
-        results["semantic_search"]["throughput_qps"] = round(
-            len(latencies) / (sum(latencies) / 1000), 2
-        )
-
-    print(f"    Average latency: {results['semantic_search']['avg_latency_ms']} ms")
-    print(f"    Throughput: {results['semantic_search']['throughput_qps']} queries/sec")
-
-    # Test hybrid search performance
-    print("\n  Testing hybrid search performance...")
-    for query in PERFORMANCE_QUERIES:
-        start_time = time.time()
-        try:
-            semantic_service.hybrid_search(query, top_k=5)
-        except Exception:
-            pass
-        latency_ms = (time.time() - start_time) * 1000
-        results["hybrid_search"]["latencies"].append(latency_ms)
-
-    # Calculate hybrid search metrics
-    latencies = results["hybrid_search"]["latencies"]
-    if latencies:
-        results["hybrid_search"]["avg_latency_ms"] = round(sum(latencies) / len(latencies), 2)
-        results["hybrid_search"]["min_latency_ms"] = round(min(latencies), 2)
-        results["hybrid_search"]["max_latency_ms"] = round(max(latencies), 2)
-        results["hybrid_search"]["throughput_qps"] = round(
-            len(latencies) / (sum(latencies) / 1000), 2
-        )
-
-    print(f"    Average latency: {results['hybrid_search']['avg_latency_ms']} ms")
-    print(f"    Throughput: {results['hybrid_search']['throughput_qps']} queries/sec")
-
-    print("\n  ✅ Performance evaluation complete")
-
-    return results
+def _drop_optional_indexes(db: Session) -> None:
+    for name in _OPTIONAL_INDEXES:
+        db.execute(text(f"DROP INDEX IF EXISTS {name}"))
+    db.commit()
 
 
-def evaluate_embeddings(db: Session) -> dict[str, Any]:
-    """
-    Evaluate embedding quality
+def _create_optional_indexes(db: Session) -> None:
+    for ddl in _OPTIONAL_INDEXES.values():
+        db.execute(text(ddl))
+    db.commit()
 
-    Learning Objectives (Week 12):
-    - Assess embedding coverage
-    - Check vector dimensions
-    - Verify embedding consistency
 
-    Args:
-        db: Database session
+def _capture_plans(db: Session, header: str) -> str:
+    lines = [header, "=" * len(header), ""]
+    for name, query in _PLAN_QUERIES:
+        lines.append(f"-- {name}")
+        lines.append(query)
+        plan_rows = db.execute(text(f"EXPLAIN ANALYZE {query}")).fetchall()
+        lines.extend(row[0] for row in plan_rows)
+        lines.append("")
+    return "\n".join(lines)
 
-    Returns:
-        Dictionary with embedding metrics
-    """
-    print("\n🎯 Evaluating Embeddings...")
 
-    # Count resources, chunks, and embeddings
-    resource_count = db.query(Resource).count()
-    chunk_count = db.query(ResourceChunk).count()
-    embedding_count = db.query(ChunkEmbedding).count()
+def run_explain_plans(db: Session) -> None:
+    """Capture EXPLAIN ANALYZE plans with and without optional indexes."""
+    _require_postgres(db)
+    PLAN_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info("\n=== Query-plan capture ===")
 
-    # Calculate coverage
-    coverage = (embedding_count / chunk_count * 100) if chunk_count > 0 else 0
+    _drop_optional_indexes(db)
+    before = _capture_plans(db, "EXPLAIN ANALYZE - BEFORE optional indexes")
+    (PLAN_OUTPUT_DIR / "before_indexes.txt").write_text(before, encoding="utf-8")
+    logger.info("  Wrote %s", PLAN_OUTPUT_DIR / "before_indexes.txt")
 
-    # Check embedding dimensions
-    sample_embedding = db.query(ChunkEmbedding).first()
-    embedding_dim = (
-        len(sample_embedding.embedding) if sample_embedding and sample_embedding.embedding else 0
+    _create_optional_indexes(db)
+    after = _capture_plans(db, "EXPLAIN ANALYZE - AFTER optional indexes")
+    (PLAN_OUTPUT_DIR / "after_indexes.txt").write_text(after, encoding="utf-8")
+    logger.info("  Wrote %s", PLAN_OUTPUT_DIR / "after_indexes.txt")
+
+
+def _search_topk(db: Session, encoder, query: str, k: int = 5) -> list[str]:
+    """Return up to ``k`` resource titles ordered by cosine distance."""
+    query_vec = encoder.encode_for_search(query)
+    rows = db.execute(
+        text("""
+            SELECT r.title
+            FROM chunk_embeddings ce
+            JOIN resource_chunks rc ON rc.chunk_id = ce.chunk_id
+            JOIN resources r ON r.resource_id = rc.resource_id
+            ORDER BY ce.embedding <=> CAST(:vec AS vector)
+            LIMIT :k
+            """),
+        {"vec": str(query_vec), "k": k},
+    ).fetchall()
+    return [row[0] for row in rows]
+
+
+def run_semantic_eval(db: Session) -> None:
+    """Run the 10 evaluation queries and write the results table for scoring."""
+    _require_postgres(db)
+    logger.info("\n=== Semantic-search evaluation ===")
+    encoder = get_encoder()
+    spec = json.loads(EVAL_QUERIES.read_text(encoding="utf-8"))
+
+    header = (
+        "<!-- Auto-generated by scripts/run_evaluation.py. The 'notes' column is "
+        "intentionally left blank for the learner to fill in. -->\n\n"
+        "# Semantic Search Results\n\n"
+        "Score each row using the rubric in `docs/evaluation/rubric.md`.\n\n"
+        "| Query | Top-1 | Top-3 | Top-5 | Notes |\n"
+        "| ----- | ----- | ----- | ----- | ----- |\n"
     )
+    rows_md: list[str] = []
+    for item in spec["queries"]:
+        titles = _search_topk(db, encoder, item["query"], k=5)
+        top1 = titles[0] if titles else "(none)"
+        top3 = "<br>".join(titles[:3]) if titles else "(none)"
+        top5 = "<br>".join(titles[:5]) if titles else "(none)"
+        query_cell = item["query"].replace("|", "\\|")
+        rows_md.append(f"| {query_cell} | {top1} | {top3} | {top5} |  |")
+        logger.info("  query %2d -> top1=%r", item["id"], top1)
 
-    results = {
-        "resource_count": resource_count,
-        "chunk_count": chunk_count,
-        "embedding_count": embedding_count,
-        "coverage_percent": round(coverage, 2),
-        "embedding_dimension": embedding_dim,
-        "model_name": sample_embedding.model_name if sample_embedding else "unknown",
-    }
-
-    print(f"    Resources: {resource_count}")
-    print(f"    Chunks: {chunk_count}")
-    print(f"    Embeddings: {embedding_count}")
-    print(f"    Coverage: {coverage:.1f}%")
-    print(f"    Dimension: {embedding_dim}")
-
-    print("\n  ✅ Embedding evaluation complete")
-
-    return results
+    SEMANTIC_RESULTS.write_text(header + "\n".join(rows_md) + "\n", encoding="utf-8")
+    logger.info("  Wrote %s", SEMANTIC_RESULTS)
 
 
-def evaluate_database_health(db: Session) -> dict[str, Any]:
-    """
-    Evaluate database health and statistics
-
-    Learning Objectives (Week 12):
-    - Check data integrity
-    - Verify relationships
-    - Assess database size
-
-    Args:
-        db: Database session
-
-    Returns:
-        Dictionary with database health metrics
-    """
-    print("\n🏥 Evaluating Database Health...")
-
-    from app.db.models import Course, Topic
-
-    course_count = db.query(Course).count()
-    topic_count = db.query(Topic).count()
-    question_count = db.query(Question).count()
-    resource_count = db.query(Resource).count()
-
-    # Check for orphaned records
-    orphaned_topics = (
-        db.query(Topic).filter(~Topic.course_id.in_(db.query(Course.course_id))).count()
-    )
-
-    orphaned_questions = (
-        db.query(Question).filter(~Question.course_id.in_(db.query(Course.course_id))).count()
-    )
-
-    results = {
-        "tables": {
-            "courses": course_count,
-            "topics": topic_count,
-            "questions": question_count,
-            "resources": resource_count,
-        },
-        "data_integrity": {
-            "orphaned_topics": orphaned_topics,
-            "orphaned_questions": orphaned_questions,
-            "healthy": orphaned_topics == 0 and orphaned_questions == 0,
-        },
-    }
-
-    print(f"    Courses: {course_count}")
-    print(f"    Topics: {topic_count}")
-    print(f"    Questions: {question_count}")
-    print(f"    Resources: {resource_count}")
-    print(f"    Orphaned records: {orphaned_topics + orphaned_questions}")
-
-    if results["data_integrity"]["healthy"]:
-        print("    ✅ Database is healthy")
-    else:
-        print("    ⚠️  Database has integrity issues")
-
-    print("\n  ✅ Database health evaluation complete")
-
-    return results
-
-
-def generate_report(evaluation_results: dict[str, Any], output_file: str = None):
-    """
-    Generate evaluation report
-
-    Args:
-        evaluation_results: Dictionary with all evaluation results
-        output_file: Optional file path to save JSON report
-    """
-    print("\n" + "=" * 60)
-    print("📊 Evaluation Report")
-    print("=" * 60)
-
-    # Print summary
-    print("\n🎯 Quality Metrics:")
-    if "quality" in evaluation_results:
-        avg_metrics = evaluation_results["quality"].get("average_metrics", {})
-        if "semantic" in avg_metrics:
-            print("  Semantic Search:")
-            print(f"    Precision: {avg_metrics['semantic']['precision']:.3f}")
-            print(f"    Recall:    {avg_metrics['semantic']['recall']:.3f}")
-            print(f"    F1 Score:  {avg_metrics['semantic']['f1_score']:.3f}")
-
-        if "hybrid" in avg_metrics:
-            print("\n  Hybrid Search:")
-            print(f"    Precision: {avg_metrics['hybrid']['precision']:.3f}")
-            print(f"    Recall:    {avg_metrics['hybrid']['recall']:.3f}")
-            print(f"    F1 Score:  {avg_metrics['hybrid']['f1_score']:.3f}")
-
-    print("\n⚡ Performance Metrics:")
-    if "performance" in evaluation_results:
-        perf = evaluation_results["performance"]
-        if "semantic_search" in perf:
-            print("  Semantic Search:")
-            print(f"    Avg Latency: {perf['semantic_search']['avg_latency_ms']} ms")
-            print(f"    Throughput:  {perf['semantic_search']['throughput_qps']} queries/sec")
-
-        if "hybrid_search" in perf:
-            print("\n  Hybrid Search:")
-            print(f"    Avg Latency: {perf['hybrid_search']['avg_latency_ms']} ms")
-            print(f"    Throughput:  {perf['hybrid_search']['throughput_qps']} queries/sec")
-
-    print("\n🎯 Embedding Coverage:")
-    if "embeddings" in evaluation_results:
-        emb = evaluation_results["embeddings"]
-        print(f"  Coverage: {emb['coverage_percent']}%")
-        print(f"  Total Embeddings: {emb['embedding_count']}")
-        print(f"  Dimension: {emb['embedding_dimension']}")
-
-    print("\n🏥 Database Health:")
-    if "database" in evaluation_results:
-        db_health = evaluation_results["database"]
-        print(f"  Total Records: {sum(db_health['tables'].values())}")
-        print(
-            f"  Integrity: {'✅ Healthy' if db_health['data_integrity']['healthy'] else '⚠️ Issues detected'}"
-        )
-
-    # Save to file if requested
-    if output_file:
-        evaluation_results["timestamp"] = datetime.now().isoformat()
-        with open(output_file, "w") as f:
-            json.dump(evaluation_results, f, indent=2)
-        print(f"\n📄 Report saved to: {output_file}")
-
-    print("\n" + "=" * 60)
-
-
-def main():
-    """Main evaluation function"""
-    parser = argparse.ArgumentParser(description="Evaluate CourseDB-AI system")
-    parser.add_argument(
-        "--full", action="store_true", help="Run comprehensive evaluation (takes longer)"
-    )
-    parser.add_argument("--output", type=str, help="Save evaluation report to file (JSON format)")
-    parser.add_argument(
-        "--skip-performance", action="store_true", help="Skip performance benchmarks"
-    )
-    parser.add_argument("--skip-quality", action="store_true", help="Skip quality evaluation")
-
+def main() -> int:
+    parser = argparse.ArgumentParser(description="CourseDB-AI evaluation harness")
+    parser.add_argument("--sql", action="store_true", help="Run only the Week 2 SQL check")
+    parser.add_argument("--plans", action="store_true", help="Run only EXPLAIN ANALYZE capture")
+    parser.add_argument("--semantic", action="store_true", help="Run only semantic evaluation")
     args = parser.parse_args()
 
-    print("=" * 60)
-    print("CourseDB-AI Evaluation")
-    print("=" * 60)
-    print()
-
-    # Create database session
+    run_all = not (args.sql or args.plans or args.semantic)
     db = SessionLocal()
-
-    evaluation_results = {}
-
     try:
-        # Database health check (always run)
-        evaluation_results["database"] = evaluate_database_health(db)
-
-        # Embedding evaluation (always run)
-        evaluation_results["embeddings"] = evaluate_embeddings(db)
-
-        # Quality evaluation
-        if not args.skip_quality:
-            evaluation_results["quality"] = evaluate_search_quality(db)
-        else:
-            print("\n⏭️  Skipping quality evaluation")
-
-        # Performance evaluation
-        if not args.skip_performance:
-            evaluation_results["performance"] = evaluate_performance(db)
-        else:
-            print("\n⏭️  Skipping performance evaluation")
-
-        # Generate report
-        generate_report(evaluation_results, args.output)
-
-        print("\n✅ Evaluation completed successfully!")
-        print()
-
-    except Exception as e:
-        print(f"\n❌ Fatal error during evaluation: {e}")
-        import traceback
-
-        traceback.print_exc()
-        raise
-
+        if run_all or args.sql:
+            run_week2_sql(db)
+        if run_all or args.plans:
+            run_explain_plans(db)
+        if run_all or args.semantic:
+            run_semantic_eval(db)
     finally:
         db.close()
-        print("✅ Database connection closed")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -32,6 +32,7 @@ point at it.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -82,7 +83,8 @@ _QUERIES: list[tuple[str, str]] = [
 class _HashingEncoder:
     """Deterministic, offline fallback encoder.
 
-    Uses the hashing trick over word tokens to build an L2-normalised vector.
+    Uses the hashing trick over word tokens to build an L2-normalised vector
+    with a stable hash (``hashlib``), so vectors are identical across processes.
     Cosine similarity between two texts is then driven by their shared tokens,
     which is sufficient for the top-1 retrieval assertions in this smoke test.
     """
@@ -90,10 +92,14 @@ class _HashingEncoder:
     def __init__(self, dim: int = _EMBEDDING_DIM) -> None:
         self.dim = dim
 
+    def _bucket(self, token: str) -> int:
+        digest = hashlib.md5(token.encode("utf-8")).hexdigest()
+        return int(digest, 16) % self.dim
+
     def encode_for_search(self, text_value: str) -> list[float]:
         vector = np.zeros(self.dim, dtype=np.float32)
         for token in re.findall(r"[a-z0-9+]+", text_value.lower()):
-            vector[hash(token) % self.dim] += 1.0
+            vector[self._bucket(token)] += 1.0
         norm = np.linalg.norm(vector)
         if norm > 0:
             vector /= norm
