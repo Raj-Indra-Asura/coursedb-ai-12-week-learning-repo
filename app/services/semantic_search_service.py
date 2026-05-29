@@ -28,10 +28,8 @@ We use <=> (cosine distance) because:
 - Similarity = 1 - distance
 """
 
-from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List, Dict, Optional
-import numpy as np
+from sqlalchemy.orm import Session
 
 
 class SemanticSearchService:
@@ -52,12 +50,7 @@ class SemanticSearchService:
         self.db = db
         self.embedding_service = embedding_service
 
-    def search(
-        self,
-        query: str,
-        top_k: int = 5,
-        similarity_threshold: float = 0.5
-    ) -> List[Dict]:
+    def search(self, query: str, top_k: int = 5, similarity_threshold: float = 0.5) -> list[dict]:
         """
         Semantic search using vector similarity
 
@@ -109,11 +102,7 @@ class SemanticSearchService:
 
         results = self.db.execute(
             sql_query,
-            {
-                "query_embedding": embedding_str,
-                "threshold": similarity_threshold,
-                "limit": top_k
-            }
+            {"query_embedding": embedding_str, "threshold": similarity_threshold, "limit": top_k},
         ).fetchall()
 
         # 3. Format and return results
@@ -125,18 +114,14 @@ class SemanticSearchService:
                 "resource_title": row.resource_title,
                 "resource_type": row.resource_type,
                 "url": row.url,
-                "similarity": float(row.similarity)
+                "similarity": float(row.similarity),
             }
             for row in results
         ]
 
     def search_by_course(
-        self,
-        query: str,
-        course_id: int,
-        top_k: int = 5,
-        similarity_threshold: float = 0.5
-    ) -> List[Dict]:
+        self, query: str, course_id: int, top_k: int = 5, similarity_threshold: float = 0.5
+    ) -> list[dict]:
         """
         Semantic search filtered by course
 
@@ -174,8 +159,8 @@ class SemanticSearchService:
                 "query_embedding": embedding_str,
                 "course_id": course_id,
                 "threshold": similarity_threshold,
-                "limit": top_k
-            }
+                "limit": top_k,
+            },
         ).fetchall()
 
         return [
@@ -187,16 +172,12 @@ class SemanticSearchService:
                 "resource_type": row.resource_type,
                 "url": row.url,
                 "course_id": row.course_id,
-                "similarity": float(row.similarity)
+                "similarity": float(row.similarity),
             }
             for row in results
         ]
 
-    def compare_with_keyword_search(
-        self,
-        query: str,
-        top_k: int = 5
-    ) -> Dict:
+    def compare_with_keyword_search(self, query: str, top_k: int = 5) -> dict:
         """
         Compare semantic search vs keyword search
 
@@ -237,11 +218,7 @@ class SemanticSearchService:
         """)
 
         keyword_results_raw = self.db.execute(
-            keyword_query,
-            {
-                "pattern": f"%{query}%",
-                "limit": top_k
-            }
+            keyword_query, {"pattern": f"%{query}%", "limit": top_k}
         ).fetchall()
 
         keyword_results = [
@@ -252,7 +229,7 @@ class SemanticSearchService:
                 "resource_title": row.resource_title,
                 "resource_type": row.resource_type,
                 "url": row.url,
-                "match_type": "keyword"
+                "match_type": "keyword",
             }
             for row in keyword_results_raw
         ]
@@ -264,7 +241,8 @@ class SemanticSearchService:
 
         semantic_avg = (
             sum(r["similarity"] for r in semantic_results) / len(semantic_results)
-            if semantic_results else 0
+            if semantic_results
+            else 0
         )
 
         return {
@@ -277,15 +255,11 @@ class SemanticSearchService:
                 "keyword_count": len(keyword_results),
                 "overlap_count": len(overlap),
                 "unique_to_semantic": len(semantic_chunk_ids - keyword_chunk_ids),
-                "unique_to_keyword": len(keyword_chunk_ids - semantic_chunk_ids)
-            }
+                "unique_to_keyword": len(keyword_chunk_ids - semantic_chunk_ids),
+            },
         }
 
-    def get_similar_chunks(
-        self,
-        chunk_id: int,
-        top_k: int = 5
-    ) -> List[Dict]:
+    def get_similar_chunks(self, chunk_id: int, top_k: int = 5) -> list[dict]:
         """
         Find similar chunks to a given chunk
 
@@ -316,13 +290,7 @@ class SemanticSearchService:
             LIMIT :limit
         """)
 
-        results = self.db.execute(
-            sql_query,
-            {
-                "chunk_id": chunk_id,
-                "limit": top_k
-            }
-        ).fetchall()
+        results = self.db.execute(sql_query, {"chunk_id": chunk_id, "limit": top_k}).fetchall()
 
         return [
             {
@@ -331,17 +299,14 @@ class SemanticSearchService:
                 "resource_id": row.resource_id,
                 "resource_title": row.resource_title,
                 "resource_type": row.resource_type,
-                "similarity": float(row.similarity)
+                "similarity": float(row.similarity),
             }
             for row in results
         ]
 
     def hybrid_search(
-        self,
-        query: str,
-        top_k: int = 10,
-        semantic_weight: float = 0.7
-    ) -> List[Dict]:
+        self, query: str, top_k: int = 10, semantic_weight: float = 0.7
+    ) -> list[dict]:
         """
         Hybrid search combining semantic + keyword search
 
@@ -391,12 +356,7 @@ class SemanticSearchService:
         """)
 
         keyword_results_raw = self.db.execute(
-            keyword_query,
-            {
-                "query": query,
-                "pattern": f"%{query}%",
-                "limit": fetch_count
-            }
+            keyword_query, {"query": query, "pattern": f"%{query}%", "limit": fetch_count}
         ).fetchall()
 
         # Build combined results
@@ -408,7 +368,7 @@ class SemanticSearchService:
             combined[chunk_id] = {
                 **result,
                 "semantic_score": result["similarity"],
-                "keyword_score": 0.0
+                "keyword_score": 0.0,
             }
 
         # Add/merge keyword results
@@ -427,7 +387,7 @@ class SemanticSearchService:
                     "resource_type": row.resource_type,
                     "url": row.url,
                     "semantic_score": 0.0,
-                    "keyword_score": keyword_score
+                    "keyword_score": keyword_score,
                 }
 
         # Normalize keyword scores to 0-1 range
@@ -440,15 +400,13 @@ class SemanticSearchService:
         # Compute hybrid score
         for result in combined.values():
             result["hybrid_score"] = (
-                semantic_weight * result["semantic_score"] +
-                (1 - semantic_weight) * result["keyword_score"]
+                semantic_weight * result["semantic_score"]
+                + (1 - semantic_weight) * result["keyword_score"]
             )
 
         # Sort by hybrid score and return top_k
-        ranked_results = sorted(
-            combined.values(),
-            key=lambda x: x["hybrid_score"],
-            reverse=True
-        )[:top_k]
+        ranked_results = sorted(combined.values(), key=lambda x: x["hybrid_score"], reverse=True)[
+            :top_k
+        ]
 
         return ranked_results

@@ -17,9 +17,10 @@ Learning Objectives:
 - Implement hybrid search strategies
 """
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 
 from app.db.database import get_db
 from app.services.embedding_service import EmbeddingService
@@ -29,7 +30,7 @@ from app.services.sql_search_service import SQLSearchService
 router = APIRouter(prefix="/api/search", tags=["search"])
 
 # Global embedding service (loaded once at startup)
-_embedding_service: Optional[EmbeddingService] = None
+_embedding_service: EmbeddingService | None = None
 
 
 def get_embedding_service() -> EmbeddingService:
@@ -44,14 +45,17 @@ def get_embedding_service() -> EmbeddingService:
 # Semantic Search Endpoints
 # ==========================================
 
+
 @router.get("/semantic")
 async def semantic_search(
     q: str = Query(..., description="Search query", min_length=1),
     top_k: int = Query(5, ge=1, le=50, description="Number of results"),
-    similarity_threshold: float = Query(0.5, ge=0.0, le=1.0, description="Minimum similarity score"),
-    course_id: Optional[int] = Query(None, description="Filter by course ID"),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+    similarity_threshold: float = Query(
+        0.5, ge=0.0, le=1.0, description="Minimum similarity score"
+    ),
+    course_id: int | None = Query(None, description="Filter by course ID"),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
     """
     Search using semantic vector similarity
 
@@ -76,24 +80,14 @@ async def semantic_search(
 
         if course_id:
             results = search_service.search_by_course(
-                query=q,
-                course_id=course_id,
-                top_k=top_k,
-                similarity_threshold=similarity_threshold
+                query=q, course_id=course_id, top_k=top_k, similarity_threshold=similarity_threshold
             )
         else:
             results = search_service.search(
-                query=q,
-                top_k=top_k,
-                similarity_threshold=similarity_threshold
+                query=q, top_k=top_k, similarity_threshold=similarity_threshold
             )
 
-        return {
-            "query": q,
-            "search_type": "semantic",
-            "count": len(results),
-            "results": results
-        }
+        return {"query": q, "search_type": "semantic", "count": len(results), "results": results}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
@@ -101,10 +95,8 @@ async def semantic_search(
 
 @router.get("/semantic/similar-chunks/{chunk_id}")
 async def get_similar_chunks(
-    chunk_id: int,
-    top_k: int = Query(5, ge=1, le=20),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+    chunk_id: int, top_k: int = Query(5, ge=1, le=20), db: Session = Depends(get_db)
+) -> dict[str, Any]:
     """
     Find chunks similar to a given chunk
 
@@ -123,11 +115,7 @@ async def get_similar_chunks(
 
         results = search_service.get_similar_chunks(chunk_id, top_k=top_k)
 
-        return {
-            "chunk_id": chunk_id,
-            "count": len(results),
-            "results": results
-        }
+        return {"chunk_id": chunk_id, "count": len(results), "results": results}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Similar chunks search failed: {str(e)}")
@@ -137,13 +125,16 @@ async def get_similar_chunks(
 # Hybrid Search Endpoint
 # ==========================================
 
+
 @router.get("/hybrid")
 async def hybrid_search(
     q: str = Query(..., description="Search query", min_length=1),
     top_k: int = Query(10, ge=1, le=50),
-    semantic_weight: float = Query(0.7, ge=0.0, le=1.0, description="Weight for semantic score (0-1)"),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+    semantic_weight: float = Query(
+        0.7, ge=0.0, le=1.0, description="Weight for semantic score (0-1)"
+    ),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
     """
     Hybrid search combining semantic + keyword search
 
@@ -169,9 +160,7 @@ async def hybrid_search(
         search_service = SemanticSearchService(db, embedding_service)
 
         results = search_service.hybrid_search(
-            query=q,
-            top_k=top_k,
-            semantic_weight=semantic_weight
+            query=q, top_k=top_k, semantic_weight=semantic_weight
         )
 
         return {
@@ -180,7 +169,7 @@ async def hybrid_search(
             "semantic_weight": semantic_weight,
             "keyword_weight": 1 - semantic_weight,
             "count": len(results),
-            "results": results
+            "results": results,
         }
 
     except Exception as e:
@@ -191,12 +180,13 @@ async def hybrid_search(
 # Search Comparison Endpoint
 # ==========================================
 
+
 @router.get("/compare")
 async def compare_search(
     q: str = Query(..., description="Search query", min_length=1),
     top_k: int = Query(5, ge=1, le=20),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
     """
     Compare semantic search vs keyword search
 
@@ -219,10 +209,7 @@ async def compare_search(
         embedding_service = get_embedding_service()
         search_service = SemanticSearchService(db, embedding_service)
 
-        comparison = search_service.compare_with_keyword_search(
-            query=q,
-            top_k=top_k
-        )
+        comparison = search_service.compare_with_keyword_search(query=q, top_k=top_k)
 
         return comparison
 
@@ -234,16 +221,17 @@ async def compare_search(
 # SQL Search Endpoint
 # ==========================================
 
+
 @router.get("/sql")
 async def sql_search(
-    topic_name: Optional[str] = Query(None, description="Filter by topic name"),
-    difficulty: Optional[str] = Query(None, description="Filter by difficulty"),
-    year: Optional[int] = Query(None, ge=2010, le=2030, description="Filter by year"),
-    exam_type: Optional[str] = Query(None, description="Filter by exam type"),
-    course_id: Optional[int] = Query(None, description="Filter by course ID"),
+    topic_name: str | None = Query(None, description="Filter by topic name"),
+    difficulty: str | None = Query(None, description="Filter by difficulty"),
+    year: int | None = Query(None, ge=2010, le=2030, description="Filter by year"),
+    exam_type: str | None = Query(None, description="Filter by exam type"),
+    course_id: int | None = Query(None, description="Filter by course ID"),
     limit: int = Query(20, ge=1, le=100),
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
     """
     SQL-based search with metadata filters
 
@@ -272,7 +260,7 @@ async def sql_search(
             year=year,
             exam_type=exam_type,
             course_id=course_id,
-            limit=limit
+            limit=limit,
         )
 
         return {
@@ -282,10 +270,10 @@ async def sql_search(
                 "difficulty": difficulty,
                 "year": year,
                 "exam_type": exam_type,
-                "course_id": course_id
+                "course_id": course_id,
             },
             "count": len(results),
-            "results": results
+            "results": results,
         }
 
     except Exception as e:
@@ -296,8 +284,9 @@ async def sql_search(
 # Health Check
 # ==========================================
 
+
 @router.get("/health")
-async def search_health() -> Dict[str, Any]:
+async def search_health() -> dict[str, Any]:
     """
     Check search service health
 
@@ -312,15 +301,8 @@ async def search_health() -> Dict[str, Any]:
             "status": "healthy",
             "embedding_model": embedding_service.model_name,
             "embedding_dimension": embedding_service.get_embedding_dimension(),
-            "services": {
-                "embedding": "ready",
-                "semantic_search": "ready",
-                "sql_search": "ready"
-            }
+            "services": {"embedding": "ready", "semantic_search": "ready", "sql_search": "ready"},
         }
 
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e)
-        }
+        return {"status": "unhealthy", "error": str(e)}

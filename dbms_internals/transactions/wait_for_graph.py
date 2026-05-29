@@ -28,17 +28,17 @@ TODO (Week 9):
 4. Test with deadlock scenarios
 """
 
-from typing import List, Dict, Set, Optional
+from collections import defaultdict
 from dataclasses import dataclass
-from collections import defaultdict, deque
 
 
 @dataclass
 class Transaction:
     """Represents a transaction"""
+
     tx_id: str
-    holds: List[str]  # Resources this transaction holds
-    waits_for: List[str]  # Resources this transaction waits for
+    holds: list[str]  # Resources this transaction holds
+    waits_for: list[str]  # Resources this transaction waits for
 
 
 class WaitForGraph:
@@ -57,13 +57,13 @@ class WaitForGraph:
 
     def __init__(self):
         # Adjacency list: tx_id → [tx_ids that this tx waits for]
-        self.graph: Dict[str, List[str]] = defaultdict(list)
+        self.graph: dict[str, list[str]] = defaultdict(list)
         # Resource ownership: resource → tx_id that holds it
-        self.resource_owner: Dict[str, str] = {}
+        self.resource_owner: dict[str, str] = {}
         # Transactions
-        self.transactions: Dict[str, Transaction] = {}
+        self.transactions: dict[str, Transaction] = {}
 
-    def add_transaction(self, tx_id: str, holds: List[str], waits_for: List[str]):
+    def add_transaction(self, tx_id: str, holds: list[str], waits_for: list[str]):
         """
         Add transaction to wait-for graph
 
@@ -79,12 +79,21 @@ class WaitForGraph:
         for resource in holds:
             self.resource_owner[resource] = tx_id
 
-        # Build wait-for edges
-        for resource in waits_for:
-            if resource in self.resource_owner:
-                blocking_tx = self.resource_owner[resource]
-                # tx_id waits for blocking_tx
-                self.graph[tx_id].append(blocking_tx)
+        # (Re)build the wait-for edges. Building from scratch here makes the
+        # graph independent of the order in which transactions are added: an
+        # edge T_a -> T_b is created whenever T_a waits for a resource held by
+        # T_b, regardless of which was added first.
+        self._rebuild_edges()
+
+    def _rebuild_edges(self) -> None:
+        """Recompute all wait-for edges from the current ownership map."""
+        self.graph = defaultdict(list)
+        for tx_id, transaction in self.transactions.items():
+            for resource in transaction.waits_for:
+                blocking_tx = self.resource_owner.get(resource)
+                if blocking_tx is not None and blocking_tx != tx_id:
+                    if blocking_tx not in self.graph[tx_id]:
+                        self.graph[tx_id].append(blocking_tx)
 
     def detect_deadlock(self) -> bool:
         """
@@ -99,7 +108,7 @@ class WaitForGraph:
         visited = set()
         rec_stack = set()
 
-        def has_cycle_dfs(node: str, path: List[str]) -> bool:
+        def has_cycle_dfs(node: str, path: list[str]) -> bool:
             """DFS to detect cycle"""
             if node in rec_stack:
                 # Found cycle!
@@ -110,22 +119,23 @@ class WaitForGraph:
             visited.add(node)
             rec_stack.add(node)
 
-            for neighbor in self.graph[node]:
+            for neighbor in self.graph.get(node, []):
                 if has_cycle_dfs(neighbor, path + [neighbor]):
                     return True
 
             rec_stack.remove(node)
             return False
 
-        # Check all nodes for cycles
-        for tx_id in self.graph:
+        # Check all nodes for cycles (snapshot keys: the graph is a defaultdict
+        # and DFS lookups must not mutate it during iteration).
+        for tx_id in list(self.graph):
             if tx_id not in visited:
                 if has_cycle_dfs(tx_id, [tx_id]):
                     return True
 
         return False
 
-    def get_deadlock_cycle(self) -> Optional[List[str]]:
+    def get_deadlock_cycle(self) -> list[str] | None:
         """
         Find and return a deadlock cycle if it exists
 
@@ -136,7 +146,7 @@ class WaitForGraph:
         visited = set()
         rec_stack = []
 
-        def find_cycle_dfs(node: str) -> Optional[List[str]]:
+        def find_cycle_dfs(node: str) -> list[str] | None:
             if node in rec_stack:
                 # Found cycle! Extract it
                 cycle_start = rec_stack.index(node)
@@ -148,7 +158,7 @@ class WaitForGraph:
             visited.add(node)
             rec_stack.append(node)
 
-            for neighbor in self.graph[node]:
+            for neighbor in self.graph.get(node, []):
                 cycle = find_cycle_dfs(neighbor)
                 if cycle:
                     return cycle
@@ -156,7 +166,7 @@ class WaitForGraph:
             rec_stack.pop()
             return None
 
-        for tx_id in self.graph:
+        for tx_id in list(self.graph):
             cycle = find_cycle_dfs(tx_id)
             if cycle:
                 return cycle
@@ -219,7 +229,7 @@ def demo_deadlock_detection():
     graph1.add_transaction("T2", holds=["Y"], waits_for=["X"])
     graph1.visualize()
 
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     print("=== Scenario 2: No Deadlock ===")
     print()
@@ -230,7 +240,7 @@ def demo_deadlock_detection():
     graph2.add_transaction("T3", holds=[], waits_for=["X"])
     graph2.visualize()
 
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     print("=== Scenario 3: Three-Way Deadlock ===")
     print()

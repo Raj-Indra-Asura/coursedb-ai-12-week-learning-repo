@@ -23,7 +23,6 @@ Why Chunking?
 - Overlapping chunks = better context preservation
 """
 
-from typing import List, Tuple
 import re
 
 
@@ -33,8 +32,8 @@ class ChunkingService:
     def __init__(
         self,
         chunk_size: int = 250,  # words
-        overlap: int = 50,      # words
-        min_chunk_size: int = 50  # minimum words per chunk
+        overlap: int = 50,  # words
+        min_chunk_size: int = 50,  # minimum words per chunk
     ):
         """
         Initialize chunking service
@@ -72,22 +71,22 @@ class ChunkingService:
             return ""
 
         # Normalize whitespace (tabs, newlines, multiple spaces)
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
 
         # Remove leading/trailing whitespace
         text = text.strip()
 
         # Normalize common unicode characters
-        text = text.replace('\u00a0', ' ')  # Non-breaking space
-        text = text.replace('\u2019', "'")  # Right single quotation
-        text = text.replace('\u201c', '"')  # Left double quotation
-        text = text.replace('\u201d', '"')  # Right double quotation
-        text = text.replace('\u2013', '-')  # En dash
-        text = text.replace('\u2014', '-')  # Em dash
+        text = text.replace("\u00a0", " ")  # Non-breaking space
+        text = text.replace("\u2019", "'")  # Right single quotation
+        text = text.replace("\u201c", '"')  # Left double quotation
+        text = text.replace("\u201d", '"')  # Right double quotation
+        text = text.replace("\u2013", "-")  # En dash
+        text = text.replace("\u2014", "-")  # Em dash
 
         return text
 
-    def _split_into_sentences(self, text: str) -> List[str]:
+    def _split_into_sentences(self, text: str) -> list[str]:
         """
         Split text into sentences
 
@@ -101,14 +100,14 @@ class ChunkingService:
         """
         # Simple sentence splitter (handles most cases)
         # Pattern: . ! ? followed by whitespace and capital letter
-        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+        sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", text)
 
         # Filter out empty sentences
         sentences = [s.strip() for s in sentences if s.strip()]
 
         return sentences
 
-    def chunk_text(self, text: str) -> List[Tuple[str, int]]:
+    def chunk_text(self, text: str) -> list[tuple[str, int]]:
         """
         Split text into overlapping chunks
 
@@ -153,13 +152,13 @@ class ChunkingService:
             # If adding this sentence exceeds chunk_size, save current chunk
             if current_word_count + sentence_words > self.chunk_size and current_chunk:
                 # Save current chunk
-                chunk_text = ' '.join(current_chunk)
+                chunk_text = " ".join(current_chunk)
                 chunks.append((chunk_text, chunk_order))
                 chunk_order += 1
 
                 # Start new chunk with overlap
                 # Keep last few sentences for overlap
-                overlap_text = ' '.join(current_chunk)
+                overlap_text = " ".join(current_chunk)
                 overlap_words = overlap_text.split()
 
                 if len(overlap_words) > self.overlap:
@@ -188,7 +187,7 @@ class ChunkingService:
 
         # Add final chunk if it meets minimum size
         if current_chunk:
-            chunk_text = ' '.join(current_chunk)
+            chunk_text = " ".join(current_chunk)
             word_count = len(chunk_text.split())
 
             if word_count >= self.min_chunk_size:
@@ -196,7 +195,7 @@ class ChunkingService:
             elif chunks:
                 # If too small, merge with previous chunk
                 prev_chunk_text, prev_order = chunks[-1]
-                merged_text = prev_chunk_text + ' ' + chunk_text
+                merged_text = prev_chunk_text + " " + chunk_text
                 chunks[-1] = (merged_text, prev_order)
             else:
                 # First and only chunk, keep it even if small
@@ -204,7 +203,7 @@ class ChunkingService:
 
         return chunks
 
-    def chunk_resource(self, resource_text: str, resource_id: int) -> List[dict]:
+    def chunk_resource(self, resource_text: str, resource_id: int) -> list[dict]:
         """
         Chunk a resource and prepare for database insertion
 
@@ -226,11 +225,7 @@ class ChunkingService:
         chunks = self.chunk_text(resource_text)
 
         return [
-            {
-                "resource_id": resource_id,
-                "chunk_text": chunk_text,
-                "chunk_order": chunk_order
-            }
+            {"resource_id": resource_id, "chunk_text": chunk_text, "chunk_order": chunk_order}
             for chunk_text, chunk_order in chunks
         ]
 
@@ -260,7 +255,7 @@ class ChunkingService:
                 "num_chunks": 0,
                 "avg_chunk_size": 0,
                 "min_chunk_size": 0,
-                "max_chunk_size": 0
+                "max_chunk_size": 0,
             }
 
         chunk_sizes = [len(chunk_text.split()) for chunk_text, _ in chunks]
@@ -270,5 +265,5 @@ class ChunkingService:
             "num_chunks": len(chunks),
             "avg_chunk_size": sum(chunk_sizes) // len(chunk_sizes),
             "min_chunk_size": min(chunk_sizes),
-            "max_chunk_size": max(chunk_sizes)
+            "max_chunk_size": max(chunk_sizes),
         }

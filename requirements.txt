@@ -19,6 +19,7 @@ scikit-learn==1.3.2
 
 # Data Processing
 pandas==2.1.3
+tqdm==4.66.1  # Progress bars for bulk embedding generation (scripts/generate_embeddings.py)
 
 # Testing
 pytest==7.4.3
@@ -36,5 +37,6 @@ streamlit==1.28.2
 
 # Utilities
 pydantic==2.5.0
+email-validator>=2.0.0  # Required by pydantic EmailStr (User schema)
 python-multipart>=0.0.27  # Security: Patched multiple vulnerabilities including DoS and arbitrary file write
 requests==2.31.0

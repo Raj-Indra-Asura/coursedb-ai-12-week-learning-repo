@@ -12,10 +12,11 @@ Learning Objectives:
 - Implement health monitoring
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.db.database import get_db, get_db_info
 
@@ -40,7 +41,7 @@ async def health_check():
         "status": "healthy",
         "message": "CourseDB-AI API is running",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
 
 
@@ -84,7 +85,7 @@ async def database_health(db: Session = Depends(get_db)):
                 "port": db_info["port"],
                 "database": db_info["database"],
             },
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
 
     except Exception as e:
@@ -94,7 +95,7 @@ async def database_health(db: Session = Depends(get_db)):
             "database": "disconnected",
             "error": str(e),
             "error_type": type(e).__name__,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
 
 
@@ -117,16 +118,12 @@ async def check_tables(db: Session = Depends(get_db)):
     - Confirm schema setup
     """
     try:
-        # Query PostgreSQL system catalog to list tables
-        query = text("""
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            ORDER BY table_name
-        """)
+        # Use SQLAlchemy's dialect-agnostic inspector so this works on both
+        # PostgreSQL (production) and SQLite (tests).
+        from sqlalchemy import inspect as sa_inspect
 
-        result = db.execute(query)
-        tables = [row[0] for row in result.fetchall()]
+        inspector = sa_inspect(db.bind)
+        tables = sorted(inspector.get_table_names())
 
         # Expected tables from models.py
         expected_tables = [
@@ -150,14 +147,11 @@ async def check_tables(db: Session = Depends(get_db)):
             "tables": tables,
             "missing_tables": missing_tables,
             "extra_tables": extra_tables,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to check tables: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to check tables: {str(e)}")
 
 
 @router.get("/db/counts")
@@ -198,14 +192,11 @@ async def data_counts(db: Session = Depends(get_db)):
             "status": "healthy",
             "counts": counts,
             "total_rows": total_rows,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.utcnow().isoformat() + "Z",
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get counts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get counts: {str(e)}")
 
 
 """

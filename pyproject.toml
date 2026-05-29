@@ -1,0 +1,96 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coursedb-ai"
+version = "0.1.0"
+description = "CourseDB-AI: a hybrid relational + vector search system for academic resource retrieval (12-week DBMS + AI learning project)."
+readme = "README.md"
+requires-python = ">=3.10"
+
+# Runtime dependencies are pinned in requirements.txt to keep the learning
+# workflow simple; this section is intentionally left minimal.
+dependencies = []
+
+[tool.setuptools]
+# This is an application, not a distributable library. Declare the packages
+# explicitly so editable installs / tooling do not try to auto-discover the
+# many top-level content directories (weeks/, docs/, ...).
+packages = ["app", "dbms_internals"]
+
+# ----------------------------------------------------------------------------
+# Ruff: linting (https://docs.astral.sh/ruff/)
+# ----------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "alembic/versions", "weeks", "docs"]
+
+[tool.ruff.lint]
+# Sensible defaults: pycodestyle (E), pyflakes (F), isort (I),
+# pyupgrade (UP), flake8-bugbear (B).
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # line length is handled by black/formatter
+    "B008",  # FastAPI uses function calls (Depends/Query) in argument defaults
+    "B904",  # re-raising HTTPException inside `except` is the idiomatic FastAPI
+             # pattern used throughout the API layer; chaining adds only noise
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"app/tests/*" = ["F811", "F401"]
+
+# ----------------------------------------------------------------------------
+# Black: formatting
+# ----------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+extend-exclude = "/(\\.venv|alembic/versions)/"
+
+# ----------------------------------------------------------------------------
+# mypy: static typing (non-blocking for now)
+# ----------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = false
+check_untyped_defs = false
+# Type errors should not block the learning workflow yet.
+disable_error_code = ["import-untyped"]
+exclude = "(\\.venv|alembic|weeks|docs|app/tests)"
+
+# ----------------------------------------------------------------------------
+# pytest
+# ----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["app/tests", "dbms_internals"]
+python_files = ["test_*.py"]
+addopts = "-q"
+markers = [
+    "requires_pgvector: test needs a live PostgreSQL with the pgvector extension",
+    "requires_model: test needs the sentence-transformers model to be available",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+# ----------------------------------------------------------------------------
+# Coverage
+# ----------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["app", "dbms_internals"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "app/frontend/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "def demo_",
+]

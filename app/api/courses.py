@@ -21,23 +21,18 @@ Database Table: courses
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from typing import List
+from sqlalchemy.orm import Session
 
-from app.db.models import Course, Topic
 from app.db.database import get_db
-from app.schemas import CourseCreate, CourseUpdate, CourseResponse
+from app.db.models import Course
+from app.schemas import CourseCreate, CourseResponse, CourseUpdate
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
 
 
-@router.get("/", response_model=List[CourseResponse])
-async def list_courses(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
+@router.get("/", response_model=list[CourseResponse])
+async def list_courses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     List all courses with pagination
 
@@ -85,8 +80,7 @@ async def get_course(course_id: int, db: Session = Depends(get_db)):
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with ID {course_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Course with ID {course_id} not found"
         )
 
     return course
@@ -132,21 +126,17 @@ async def create_course(course: CourseCreate, db: Session = Depends(get_db)):
 
         return db_course
 
-    except IntegrityError as e:
+    except IntegrityError:
         db.rollback()
         # UNIQUE constraint violation (duplicate course_code)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Course code '{course.course_code}' already exists"
+            detail=f"Course code '{course.course_code}' already exists",
         )
 
 
 @router.put("/{course_id}", response_model=CourseResponse)
-async def update_course(
-    course_id: int,
-    course: CourseUpdate,
-    db: Session = Depends(get_db)
-):
+async def update_course(course_id: int, course: CourseUpdate, db: Session = Depends(get_db)):
     """
     Update an existing course
 
@@ -172,8 +162,7 @@ async def update_course(
 
     if not db_course:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with ID {course_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Course with ID {course_id} not found"
         )
 
     try:
@@ -190,8 +179,7 @@ async def update_course(
     except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Course code already exists"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Course code already exists"
         )
 
 
@@ -223,8 +211,7 @@ async def delete_course(course_id: int, db: Session = Depends(get_db)):
 
     if not db_course:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with ID {course_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Course with ID {course_id} not found"
         )
 
     db.delete(db_course)
@@ -233,7 +220,7 @@ async def delete_course(course_id: int, db: Session = Depends(get_db)):
     return None  # 204 No Content
 
 
-@router.get("/{course_id}/topics", response_model=List[dict])
+@router.get("/{course_id}/topics", response_model=list[dict])
 async def get_course_topics(course_id: int, db: Session = Depends(get_db)):
     """
     Get all topics for a specific course
@@ -257,8 +244,7 @@ async def get_course_topics(course_id: int, db: Session = Depends(get_db)):
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Course with ID {course_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Course with ID {course_id} not found"
         )
 
     # Use relationship to get topics (SQLAlchemy automatically JOINs)
@@ -269,7 +255,7 @@ async def get_course_topics(course_id: int, db: Session = Depends(get_db)):
             "topic_id": t.topic_id,
             "topic_name": t.topic_name,
             "description": t.description,
-            "week_number": t.week_number
+            "week_number": t.week_number,
         }
         for t in topics
     ]

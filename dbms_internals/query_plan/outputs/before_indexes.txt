@@ -1,0 +1,47 @@
+EXPLAIN ANALYZE - BEFORE optional indexes
+=========================================
+
+-- questions_by_year
+SELECT * FROM questions WHERE year = 2023
+Index Scan using ix_questions_year on questions  (cost=0.14..8.16 rows=1 width=970) (actual time=0.005..0.006 rows=9 loops=1)
+  Index Cond: (year = 2023)
+Planning Time: 0.045 ms
+Execution Time: 0.014 ms
+
+-- hard_questions
+SELECT * FROM questions WHERE difficulty = 'hard'
+Index Scan using ix_questions_difficulty on questions  (cost=0.14..8.16 rows=1 width=970) (actual time=0.005..0.006 rows=3 loops=1)
+  Index Cond: ((difficulty)::text = 'hard'::text)
+Planning Time: 0.044 ms
+Execution Time: 0.012 ms
+
+-- questions_join_topics
+SELECT q.question_text, t.topic_name FROM questions q JOIN topics t ON t.topic_id = q.topic_id
+Hash Join  (cost=11.80..26.31 rows=80 width=250) (actual time=0.016..0.021 rows=10 loops=1)
+  Hash Cond: (t.topic_id = q.topic_id)
+  ->  Seq Scan on topics t  (cost=0.00..12.70 rows=270 width=222) (actual time=0.002..0.003 rows=19 loops=1)
+  ->  Hash  (cost=10.80..10.80 rows=80 width=36) (actual time=0.010..0.010 rows=10 loops=1)
+        Buckets: 1024  Batches: 1  Memory Usage: 10kB
+        ->  Seq Scan on questions q  (cost=0.00..10.80 rows=80 width=36) (actual time=0.002..0.004 rows=10 loops=1)
+Planning Time: 0.096 ms
+Execution Time: 0.031 ms
+
+-- questions_per_topic
+SELECT topic_id, count(*) FROM questions GROUP BY topic_id
+HashAggregate  (cost=11.20..12.00 rows=80 width=12) (actual time=0.009..0.011 rows=9 loops=1)
+  Group Key: topic_id
+  Batches: 1  Memory Usage: 24kB
+  ->  Seq Scan on questions  (cost=0.00..10.80 rows=80 width=4) (actual time=0.003..0.004 rows=10 loops=1)
+Planning Time: 0.043 ms
+Execution Time: 0.022 ms
+
+-- resources_by_year
+SELECT * FROM resources WHERE year_published >= 2022 ORDER BY year_published DESC
+Sort  (cost=10.54..10.57 rows=10 width=2042) (actual time=0.012..0.012 rows=6 loops=1)
+  Sort Key: year_published DESC
+  Sort Method: quicksort  Memory: 27kB
+  ->  Seq Scan on resources  (cost=0.00..10.38 rows=10 width=2042) (actual time=0.005..0.008 rows=6 loops=1)
+        Filter: (year_published >= 2022)
+        Rows Removed by Filter: 1
+Planning Time: 0.134 ms
+Execution Time: 0.020 ms

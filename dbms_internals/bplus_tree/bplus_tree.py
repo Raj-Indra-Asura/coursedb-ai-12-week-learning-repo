@@ -34,8 +34,8 @@ TODO (Week 7):
 6. Test with keys: 10, 20, 5, 6, 12, 30, 7
 """
 
-from typing import List, Optional, Tuple, Any
 from dataclasses import dataclass
+from typing import Any, Optional
 
 
 @dataclass
@@ -54,11 +54,12 @@ class BPlusTreeNode:
     - is_leaf: True
     - next: pointer to next leaf (for range scans)
     """
+
     order: int  # Maximum children
-    keys: List[int]
-    children: List  # List[BPlusTreeNode] for internal, List[any] for leaf
+    keys: list[int]
+    children: list  # List[BPlusTreeNode] for internal, List[any] for leaf
     is_leaf: bool
-    next: Optional['BPlusTreeNode'] = None  # Only for leaf nodes
+    next: Optional["BPlusTreeNode"] = None  # Only for leaf nodes
 
     def is_full(self) -> bool:
         """Check if node is full and needs to split"""
@@ -90,12 +91,7 @@ class BPlusTree:
             raise ValueError("Order must be at least 3")
 
         self.order = order
-        self.root = BPlusTreeNode(
-            order=order,
-            keys=[],
-            children=[],
-            is_leaf=True
-        )
+        self.root = BPlusTreeNode(order=order, keys=[], children=[], is_leaf=True)
 
     def insert(self, key: int, value: Any = None):
         """
@@ -203,7 +199,7 @@ class BPlusTree:
             keys=leaf.keys[mid:],
             children=leaf.children[mid:],
             is_leaf=True,
-            next=leaf.next
+            next=leaf.next,
         )
 
         # Update original leaf (becomes left node)
@@ -215,17 +211,16 @@ class BPlusTree:
         if parent is None:
             # Root was a leaf, create new root
             new_root = BPlusTreeNode(
-                order=self.order,
-                keys=[split_key],
-                children=[leaf, new_right],
-                is_leaf=False
+                order=self.order, keys=[split_key], children=[leaf, new_right], is_leaf=False
             )
             self.root = new_root
         else:
             # Insert into existing parent
             self._insert_into_internal(parent, split_key, new_right, parent_index)
 
-    def _find_parent(self, current: BPlusTreeNode, target: BPlusTreeNode, key: int) -> Tuple[Optional[BPlusTreeNode], int]:
+    def _find_parent(
+        self, current: BPlusTreeNode, target: BPlusTreeNode, key: int
+    ) -> tuple[BPlusTreeNode | None, int]:
         """
         Find parent of target node
 
@@ -254,28 +249,26 @@ class BPlusTree:
 
         return None, -1
 
-    def _insert_into_internal(self, node: BPlusTreeNode, key: int, right_child: BPlusTreeNode, child_index: int):
+    def _insert_into_internal(
+        self, node: BPlusTreeNode, key: int, right_child: BPlusTreeNode, child_index: int
+    ):
         """
         Insert key and right child into internal node
 
         Args:
             node: Internal node to insert into
-            key: Key to insert
-            right_child: New right child node
-            child_index: Index where split occurred
-        """
-        # Find insertion position
-        insert_pos = child_index + 1
-        for i in range(child_index + 1, len(node.keys)):
-            if key < node.keys[i]:
-                insert_pos = i
-                break
-        else:
-            insert_pos = len(node.keys)
+            key: Separator key to insert
+            right_child: New right child node produced by the split
+            child_index: Index of the left child (the node that was split)
+                within ``node.children``
 
-        # Insert key and child
-        node.keys.insert(insert_pos, key)
-        node.children.insert(insert_pos + 1, right_child)
+        Learning Note:
+        - The left child sits at ``node.children[child_index]``; the separator
+          key therefore belongs at ``node.keys[child_index]`` and the new right
+          child immediately after it at ``node.children[child_index + 1]``.
+        """
+        node.keys.insert(child_index, key)
+        node.children.insert(child_index + 1, right_child)
 
         # Check if node needs split
         if len(node.keys) >= self.order:
@@ -297,29 +290,26 @@ class BPlusTree:
         # Create new right node
         new_right = BPlusTreeNode(
             order=self.order,
-            keys=node.keys[mid + 1:],
-            children=node.children[mid + 1:],
-            is_leaf=False
+            keys=node.keys[mid + 1 :],
+            children=node.children[mid + 1 :],
+            is_leaf=False,
         )
 
         # Update original node (becomes left)
         node.keys = node.keys[:mid]
-        node.children = node.children[:mid + 1]
+        node.children = node.children[: mid + 1]
 
         # Insert into parent
         if parent is None:
             # Create new root
             new_root = BPlusTreeNode(
-                order=self.order,
-                keys=[push_up_key],
-                children=[node, new_right],
-                is_leaf=False
+                order=self.order, keys=[push_up_key], children=[node, new_right], is_leaf=False
             )
             self.root = new_root
         else:
             self._insert_into_internal(parent, push_up_key, new_right, parent_index)
 
-    def _split_leaf(self, node: BPlusTreeNode) -> Tuple[int, BPlusTreeNode]:
+    def _split_leaf(self, node: BPlusTreeNode) -> tuple[int, BPlusTreeNode]:
         """
         Split a full leaf node (legacy method for compatibility)
 
@@ -334,7 +324,7 @@ class BPlusTree:
             keys=node.keys[mid:],
             children=node.children[mid:],
             is_leaf=True,
-            next=node.next
+            next=node.next,
         )
 
         node.keys = node.keys[:mid]
@@ -343,7 +333,7 @@ class BPlusTree:
 
         return split_key, new_right
 
-    def _split_internal(self, node: BPlusTreeNode) -> Tuple[int, BPlusTreeNode]:
+    def _split_internal(self, node: BPlusTreeNode) -> tuple[int, BPlusTreeNode]:
         """
         Split a full internal node (legacy method for compatibility)
 
@@ -355,17 +345,17 @@ class BPlusTree:
 
         new_right = BPlusTreeNode(
             order=self.order,
-            keys=node.keys[mid + 1:],
-            children=node.children[mid + 1:],
-            is_leaf=False
+            keys=node.keys[mid + 1 :],
+            children=node.children[mid + 1 :],
+            is_leaf=False,
         )
 
         node.keys = node.keys[:mid]
-        node.children = node.children[:mid + 1]
+        node.children = node.children[: mid + 1]
 
         return push_up_key, new_right
 
-    def search(self, key: int) -> Optional[Any]:
+    def search(self, key: int) -> Any | None:
         """
         Search for a key in the B+ tree
 
@@ -398,7 +388,7 @@ class BPlusTree:
 
         return None
 
-    def range_search(self, start_key: int, end_key: int) -> List[Tuple[int, Any]]:
+    def range_search(self, start_key: int, end_key: int) -> list[tuple[int, Any]]:
         """
         Range query: find all keys in [start_key, end_key]
 
@@ -439,7 +429,7 @@ class BPlusTree:
 
         return results
 
-    def visualize(self, node: Optional[BPlusTreeNode] = None, level: int = 0):
+    def visualize(self, node: BPlusTreeNode | None = None, level: int = 0):
         """
         Print tree structure
 
@@ -496,14 +486,14 @@ def demo_bplus_tree():
     for key in keys:
         print(f"\n{'='*60}")
         print(f"Inserting: {key}")
-        print('='*60)
+        print("=" * 60)
         tree.insert(key)
         tree.visualize()
 
     # Demonstrate search
     print(f"\n{'='*60}")
     print("Search Examples")
-    print('='*60)
+    print("=" * 60)
     test_keys = [10, 12, 99]
     for key in test_keys:
         result = tree.search(key)
@@ -513,7 +503,7 @@ def demo_bplus_tree():
     # Demonstrate range search
     print(f"\n{'='*60}")
     print("Range Search Example")
-    print('='*60)
+    print("=" * 60)
     print("Range [5, 15]:")
     results = tree.range_search(5, 15)
     for key, value in results:

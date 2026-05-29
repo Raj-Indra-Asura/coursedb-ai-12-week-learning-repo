@@ -15,15 +15,15 @@ Learning Objectives:
 """
 
 import os
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
-from typing import Generator
 
 # Read database URL from environment variable
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://coursedb_user:coursedb_password@localhost:5432/coursedb_ai"
+    "DATABASE_URL", "postgresql://coursedb_user:coursedb_password@localhost:5432/coursedb_ai"
 )
 
 # Learning Note: Connection String Format
@@ -40,13 +40,24 @@ DATABASE_URL = os.getenv(
 # - pool_pre_ping=True: Verify connections before using (handle stale connections)
 # - pool_size=5: Number of connections to keep in pool
 # - max_overflow=10: Additional connections when pool is exhausted
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,  # Set to True to see SQL queries in console
-    pool_pre_ping=True,  # Verify connection health before use
-    pool_size=5,
-    max_overflow=10,
-)
+# Learning Note: SQLite (used in tests) does not support connection-pool
+# sizing arguments, so only apply them for server-based databases such as
+# PostgreSQL.
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,  # Set to True to see SQL queries in console
+        pool_pre_ping=True,  # Verify connection health before use
+        pool_size=5,
+        max_overflow=10,
+    )
 
 # Create SessionLocal class
 # Learning Note: Session Factory
@@ -105,6 +116,7 @@ def init_db():
     ```
     """
     from app.db.models import Base
+
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created successfully")
 
@@ -117,6 +129,7 @@ def get_db_info():
         dict: Database connection details (without password)
     """
     from sqlalchemy.engine.url import make_url
+
     url = make_url(DATABASE_URL)
     return {
         "driver": url.drivername,

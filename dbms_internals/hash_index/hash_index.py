@@ -35,8 +35,8 @@ TODO (Week 7):
 5. Visualize bucket distribution
 """
 
-from typing import List, Optional, Tuple
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -45,12 +45,13 @@ class HashBucket:
     Single bucket in hash index
     Uses chaining for collision handling
     """
-    key_value_pairs: List[Tuple[int, any]] = field(default_factory=list)
 
-    def insert(self, key: int, value: any):
+    key_value_pairs: list[tuple[int, Any]] = field(default_factory=list)
+
+    def insert(self, key: int, value: Any):
         """Insert or update key-value pair"""
         # Check if key exists (update)
-        for i, (k, v) in enumerate(self.key_value_pairs):
+        for i, (k, _v) in enumerate(self.key_value_pairs):
             if k == key:
                 self.key_value_pairs[i] = (key, value)
                 return
@@ -58,7 +59,7 @@ class HashBucket:
         # New key (append)
         self.key_value_pairs.append((key, value))
 
-    def search(self, key: int) -> Optional[any]:
+    def search(self, key: int) -> Any | None:
         """Search for key in bucket"""
         for k, v in self.key_value_pairs:
             if k == key:
@@ -67,7 +68,7 @@ class HashBucket:
 
     def delete(self, key: int) -> bool:
         """Delete key from bucket"""
-        for i, (k, v) in enumerate(self.key_value_pairs):
+        for i, (k, _v) in enumerate(self.key_value_pairs):
             if k == key:
                 del self.key_value_pairs[i]
                 return True
@@ -97,9 +98,7 @@ class HashIndex:
                          Trade-off: More buckets = fewer collisions but more memory
         """
         self.bucket_count = bucket_count
-        self.buckets: List[HashBucket] = [
-            HashBucket() for _ in range(bucket_count)
-        ]
+        self.buckets: list[HashBucket] = [HashBucket() for _ in range(bucket_count)]
         self.total_keys = 0
 
     def _hash(self, key: int) -> int:
@@ -116,7 +115,7 @@ class HashIndex:
         """
         return key % self.bucket_count
 
-    def insert(self, key: int, value: any = None):
+    def insert(self, key: int, value: Any = None):
         """
         Insert key-value pair
 
@@ -131,15 +130,17 @@ class HashIndex:
         bucket_index = self._hash(key)
         bucket = self.buckets[bucket_index]
 
-        # Check if this is a new key
-        is_new = bucket.search(key) is None
+        # Check if this is a new key. We test key membership directly rather
+        # than relying on the searched value, because a stored value may itself
+        # be ``None`` (which would otherwise be indistinguishable from "absent").
+        is_new = all(k != key for k, _ in bucket.key_value_pairs)
 
         bucket.insert(key, value)
 
         if is_new:
             self.total_keys += 1
 
-    def search(self, key: int) -> Optional[any]:
+    def search(self, key: int) -> Any | None:
         """
         Search for key
 
@@ -183,7 +184,7 @@ class HashIndex:
         avg_chain = self.total_keys / non_empty if non_empty > 0 else 0
 
         print()
-        print(f"Statistics:")
+        print("Statistics:")
         print(f"  Non-empty buckets: {non_empty}/{self.bucket_count}")
         print(f"  Max chain length: {max_chain}")
         print(f"  Avg chain length: {avg_chain:.2f}")

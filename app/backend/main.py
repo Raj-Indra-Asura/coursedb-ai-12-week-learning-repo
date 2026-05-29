@@ -19,13 +19,23 @@ Learning Objectives:
 - Implement proper error handling
 """
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
 
 # Import API routers
-from app.api import health, courses, topics, questions, resources, analytics, search, learning
+from app.api import (
+    analytics,
+    courses,
+    dbms_demo,
+    health,
+    learning,
+    questions,
+    resources,
+    search,
+    topics,
+)
 
 # Import database initialization
 from app.db.database import init_db
@@ -110,6 +120,7 @@ app.include_router(resources.router)
 app.include_router(analytics.router)
 app.include_router(search.router)
 app.include_router(learning.router)
+app.include_router(dbms_demo.router)
 
 
 # Root endpoint
@@ -150,7 +161,7 @@ async def global_exception_handler(request, exc):
             "detail": "Internal server error",
             "error": str(exc),
             "type": type(exc).__name__,
-        }
+        },
     )
 
 
@@ -166,7 +177,7 @@ async def http_exception_handler(request, exc):
         content={
             "detail": exc.detail,
             "status_code": exc.status_code,
-        }
+        },
     )
 
 
