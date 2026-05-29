@@ -1,5 +1,11 @@
 # Week 12: Reflection Prompts 🤔
 
+## 🧭 Navigation
+
+**[← Back to Week 12 Overview](README.md)** | **🎉 You've Completed the Journey!**
+
+---
+
 Take time to reflect on your 12-week journey building CourseDB-AI. These prompts will help you internalize your learning and prepare for interviews.
 
 ---
@@ -464,3 +470,9 @@ Take time to:
 **Remember:** Reflection isn't just about looking back - it's about learning forward. The insights you gain from reflecting on this project will make you a better engineer on your next one.
 
 **Keep building, keep learning, keep reflecting!**
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 12 Overview](README.md)** | **🎉 Congratulations on Completing CourseDB-AI!**

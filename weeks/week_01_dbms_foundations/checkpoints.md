@@ -1,5 +1,11 @@
 # Week 1: Progress Checkpoints
 
+## 🧭 Navigation
+
+**[← Previous: Mini Project](mini_project/README.md)** | **[Back to Week 1](README.md)** | **[Next: Mistakes to Expect →](mistakes_to_expect.md)**
+
+---
+
 ## 📋 Daily Checkpoints
 
 Use this file to track your progress throughout the week. Check off items as you complete them.
@@ -291,3 +297,10 @@ Before moving to Week 2, ensure:
 ---
 
 **Last updated**: ___________
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Mini Project](mini_project/README.md)** | **[Back to Week 1](README.md)** | **[Next: Mistakes to Expect →](mistakes_to_expect.md)**
+

@@ -5,6 +5,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Back to START_HERE](../../START_HERE.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 🎯 Why This Week Matters
 
 This week establishes the **conceptual foundation** for everything that follows. You need to understand **why databases exist**, what problems they solve, and how CourseDB-AI fits into the bigger picture of data infrastructure and AI systems.
@@ -320,3 +326,26 @@ You'll learn:
 **Ready to start? Open `theory_notes.md` and begin documenting concepts!**
 
 🎯 **Goal**: By Friday, you should be able to explain to a friend why we need databases and why CourseDB-AI is AI infrastructure.
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week Overview](README.md)** | **[Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 1 File Sequence
+
+Follow these files in order for the complete Week 1 experience:
+
+1. **[Week 1 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Learn core DBMS concepts
+3. **[Exercises](exercises.md)** - Practice what you learned
+4. **[Implementation Plan](implementation_plan.md)** - Plan CourseDB-AI
+5. **[Mini Project](mini_project/README.md)** - Build file-based store
+6. **[Checkpoints](checkpoints.md)** - Test your understanding
+7. **[Mistakes to Expect](mistakes_to_expect.md)** - Avoid common errors
+8. **[Reflection](reflection.md)** - Weekly reflection
+9. **[→ Week 2: SQL Basics](../week_02_sql_basics/README.md)** - Continue journey
+

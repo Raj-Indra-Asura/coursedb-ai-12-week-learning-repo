@@ -1,5 +1,11 @@
 # Week 4: Normalization - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 4 Overview](README.md)** | **[Next: Week 5 →](../week_05_postgresql_fastapi/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 Normalization is about making design trade-offs between data integrity, storage efficiency, and query performance. These reflections help you think critically about when to normalize and when to denormalize.
@@ -403,3 +409,9 @@ ___________
 **Remember:** Normalization is both an art and a science. The rules provide structure, but experience teaches when to break them!
 
 **Next Steps:** Complete all deliverables in `implementation_plan.md` and move to Week 5!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 4 Overview](README.md)** | **[🎉 Start Week 5 →](../week_05_postgresql_fastapi/README.md)**

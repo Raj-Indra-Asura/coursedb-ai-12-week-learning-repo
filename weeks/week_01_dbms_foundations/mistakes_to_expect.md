@@ -4,6 +4,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Previous: Checkpoints](checkpoints.md)** | **[Back to Week 1](README.md)** | **[Next: Reflection →](reflection.md)**
+
+---
+
 ## ❌ Common Misconceptions
 
 ### Misconception 1: "Database = Excel Spreadsheet"
@@ -134,3 +140,10 @@ If you answered "no" to any, revisit that section.
 ---
 
 **Remember**: Mistakes are part of learning. Document them, learn from them, move forward.
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Checkpoints](checkpoints.md)** | **[Back to Week 1](README.md)** | **[Next: Reflection →](reflection.md)**
+

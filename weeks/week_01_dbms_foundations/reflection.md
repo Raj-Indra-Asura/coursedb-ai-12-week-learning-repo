@@ -5,6 +5,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Previous: Mistakes to Expect](mistakes_to_expect.md)** | **[Back to Week 1](README.md)** | **[Next: Week 2 →](../week_02_sql_basics/README.md)**
+
+---
+
 ## 🤔 Before This Week
 
 **What I thought a database was**:
@@ -112,3 +118,9 @@ How I would explain DBMS to a friend who's never heard of it:
 
 **Reflection completed**: [Date]
 **Ready for Week 2**: ✅ / ⏳
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Mistakes to Expect](mistakes_to_expect.md)** | **[Back to Week 1](README.md)** | **[🎉 Start Week 2 →](../week_02_sql_basics/README.md)**

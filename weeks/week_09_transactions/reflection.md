@@ -1,5 +1,11 @@
 # Week 9: Transactions & Concurrency - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 9 Overview](README.md)** | **[Next: Week 10 →](../week_10_semantic_search/README.md)**
+
+---
+
 ## 📝 Purpose
 
 These reflection prompts help you solidify your understanding of transactions and concurrency control. Take time to think deeply about each question - the goal is to develop intuition, not just memorize facts.
@@ -744,3 +750,9 @@ _________________________________________________________________
 ---
 
 **Remember:** Understanding transactions deeply is what separates developers who build reliable systems from those who build systems that work "most of the time." Keep practicing, keep questioning, and always think about concurrency!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 9 Overview](README.md)** | **[🎉 Start Week 10 →](../week_10_semantic_search/README.md)**

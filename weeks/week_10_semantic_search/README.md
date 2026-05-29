@@ -1,5 +1,11 @@
 # Week 10: Semantic Search & Vector Databases
 
+## 🧭 Navigation
+
+**[← Previous: Week 9](../week_09_transactions/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 📋 Overview
 
 Week 10 introduces **semantic search** and **vector databases** - modern techniques for finding information by meaning rather than exact keywords. You'll learn how to use embeddings, pgvector, and build intelligent search systems.
@@ -872,3 +878,22 @@ async def search_semantic(
 - [Sentence Transformers](https://www.sbert.net/)
 - [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings)
 - [Vector Search Best Practices](https://www.pinecone.io/learn/vector-search/)
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 9](../week_09_transactions/reflection.md)** | **[Back to Week 10 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 10 File Sequence
+
+1. **[Week 10 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 11](../week_11_frontend_integration/README.md)** - Continue journey

@@ -1,5 +1,11 @@
 # Week 3: ER Modeling - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 3 Overview](README.md)** | **[Next: Week 4 →](../week_04_normalization/README.md)**
+
+---
+
 ## 🤔 Purpose of Reflection
 
 ER modeling is about **design thinking** - making conscious decisions about how to represent real-world problems in database structures. These reflection prompts help you:
@@ -482,3 +488,9 @@ ___________
 **Remember:** Reflection is not just about answering questions - it's about deepening your understanding by articulating your thought process. Take your time with these prompts!
 
 **Next Steps:** Complete all deliverables in `implementation_plan.md` and move to Week 4!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 3 Overview](README.md)** | **[🎉 Start Week 4 →](../week_04_normalization/README.md)**

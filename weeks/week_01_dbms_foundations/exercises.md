@@ -4,6 +4,12 @@
 
 ---
 
+## 🧭 Navigation
+
+**[← Previous: Theory Notes](theory_notes.md)** | **[Back to Week 1](README.md)** | **[Next: Implementation Plan →](implementation_plan.md)**
+
+---
+
 ## Exercise 1: Data vs Information
 
 Given these raw data points:
@@ -120,3 +126,9 @@ Explain in 3-4 sentences why CourseDB-AI is "data infrastructure" and not just a
 ---
 
 **Completed**: [Date]
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Theory Notes](theory_notes.md)** | **[Back to Week 1](README.md)** | **[Next: Implementation Plan →](implementation_plan.md)**

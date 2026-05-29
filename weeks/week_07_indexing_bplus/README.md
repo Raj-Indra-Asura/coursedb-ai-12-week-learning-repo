@@ -1,5 +1,11 @@
 # Week 7: Indexing & B+ Trees
 
+## 🧭 Navigation
+
+**[← Previous: Week 6](../week_06_advanced_sql/reflection.md)** | **[View Learning Path](../../LEARNING_PATH.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
 ## 🎯 Learning Objectives
 
 By the end of this week, you will:
@@ -813,3 +819,22 @@ CREATE INDEX idx_questions_course ON questions(course_id);
 ---
 
 **Ready to make your database blazingly fast? Let's go! 🚀**
+
+---
+
+## 🧭 Navigation
+
+**[← Previous: Week 6](../week_06_advanced_sql/reflection.md)** | **[Back to Week 7 Overview](README.md)** | **[Next: Theory Notes →](theory_notes.md)**
+
+---
+
+## 📋 Week 7 File Sequence
+
+1. **[Week 7 README](README.md)** ← You are here
+2. **[Theory Notes](theory_notes.md)** - Core concepts
+3. **[Exercises](exercises.md)** - Practice
+4. **[Implementation Plan](implementation_plan.md)** - Apply concepts
+5. **[Checkpoints](checkpoints.md)** - Track progress
+6. **[Mistakes to Expect](mistakes_to_expect.md)** - Common pitfalls
+7. **[Reflection](reflection.md)** - Weekly reflection
+8. **[→ Week 8](../week_08_query_optimization/README.md)** - Continue journey

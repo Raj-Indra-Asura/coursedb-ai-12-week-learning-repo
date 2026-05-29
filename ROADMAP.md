@@ -4,6 +4,14 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ---
 
+## 🧭 Quick Navigation
+
+**[🚀 Start Your Journey](START_HERE.md)** | **[📚 Complete Learning Path](LEARNING_PATH.md)** | **[🏠 Back to README](README.md)**
+
+**Jump to Week**: [1](#week-1-dbms-foundations--project-orientation) | [2](#week-2-sql-basics-through-academic-data) | [3](#week-3-er-modeling--schema-design) | [4](#week-4-functional-dependencies--normalization) | [5](#week-5-postgresql--fastapi-foundation) | [6](#week-6-sql-queries-views-triggers-constraints) | [7](#week-7-indexing-b-tree-hashing) | [8](#week-8-query-optimization--explain) | [9](#week-9-transactions-acid-concurrency) | [10](#week-10-embeddings-pgvector-semantic-search) | [11](#week-11-integrated-coursedb-ai-system) | [12](#week-12-evaluation-polish-portfolio)
+
+---
+
 ## 📋 Overview
 
 **Duration**: 12 weeks (3 months)
@@ -16,6 +24,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ## 🎯 Month 1: DBMS Foundations (Weeks 1-4)
 
 ### **Week 1: DBMS Foundations + Project Orientation**
+
+**📂 [Go to Week 1](weeks/week_01_dbms_foundations/README.md)**
 
 **Learning Objectives:**
 - Understand what a DBMS is and why it matters
@@ -54,6 +64,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ---
 
 ### **Week 2: SQL Basics Through Academic Data**
+
+**📂 [Go to Week 2](weeks/week_02_sql_basics/README.md)**
 
 **Learning Objectives:**
 - Master DDL (CREATE, ALTER, DROP) and DML (INSERT, UPDATE, DELETE)
@@ -94,6 +106,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ---
 
 ### **Week 3: ER Modeling + Schema Design**
+
+**📂 [Go to Week 3](weeks/week_03_er_modeling/README.md)**
 
 **Learning Objectives:**
 - Design ER diagrams with entities, attributes, relationships
@@ -136,6 +150,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ### **Week 4: Functional Dependencies + Normalization**
 
+**📂 [Go to Week 4](weeks/week_04_normalization/README.md)**
+
 **Learning Objectives:**
 - Understand functional dependencies (FDs)
 - Identify keys using FD closure
@@ -177,6 +193,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ## 🛠️ Month 2: Backend + DBMS Internals (Weeks 5-8)
 
 ### **Week 5: PostgreSQL + FastAPI Foundation**
+
+**📂 [Go to Week 5](weeks/week_05_postgresql_fastapi/README.md)**
 
 **Learning Objectives:**
 - Set up PostgreSQL with Docker
@@ -223,6 +241,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ### **Week 6: SQL Queries, Views, Triggers, Constraints**
 
+**📂 [Go to Week 6](weeks/week_06_advanced_sql/README.md)**
+
 **Learning Objectives:**
 - Implement constraints (PK, FK, UNIQUE, CHECK, NOT NULL)
 - Create database views for analytics
@@ -268,6 +288,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ---
 
 ### **Week 7: Indexing, B+ Tree, Hashing**
+
+**📂 [Go to Week 7](weeks/week_07_indexing_bplus/README.md)**
 
 **Learning Objectives:**
 - Understand indexing fundamentals
@@ -316,6 +338,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ### **Week 8: Query Optimization + EXPLAIN**
 
+**📂 [Go to Week 8](weeks/week_08_query_optimization/README.md)**
+
 **Learning Objectives:**
 - Understand query execution plans
 - Use EXPLAIN and EXPLAIN ANALYZE
@@ -363,6 +387,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ### **Week 9: Transactions, ACID, Concurrency**
 
+**📂 [Go to Week 9](weeks/week_09_transactions/README.md)**
+
 **Learning Objectives:**
 - Understand transaction concepts and ACID properties
 - Implement transaction rollback
@@ -404,6 +430,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ---
 
 ### **Week 10: Embeddings, pgvector, Semantic Search**
+
+**📂 [Go to Week 10](weeks/week_10_semantic_search/README.md)**
 
 **Learning Objectives:**
 - Understand text embeddings
@@ -460,6 +488,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 
 ### **Week 11: Integrated CourseDB-AI System**
 
+**📂 [Go to Week 11](weeks/week_11_frontend_integration/README.md)**
+
 **Learning Objectives:**
 - Integrate all modules into a cohesive system
 - Build Streamlit UI
@@ -502,6 +532,8 @@ This document provides a **detailed week-by-week plan** for building CourseDB-AI
 ---
 
 ### **Week 12: Evaluation, Polish, Portfolio**
+
+**📂 [Go to Week 12](weeks/week_12_evaluation_portfolio/README.md)**
 
 **Learning Objectives:**
 - Evaluate system correctness and performance
@@ -598,7 +630,7 @@ By Week 12, you should be able to:
 
 1. Read this roadmap completely
 2. Review AI_USAGE_RULES.md
-3. Start Week 1: DBMS Foundations
+3. **[🎯 Start Your Journey: Go to START_HERE.md](START_HERE.md)**
 4. Commit early and commit often
 5. Update LEARNING_LOG.md weekly
 6. Ask questions, break things, learn!
@@ -608,3 +640,9 @@ By Week 12, you should be able to:
 **Remember**: This is a learning journey, not a race. Prioritize understanding over speed. Document your mistakes. Celebrate small wins. Build something you're proud of.
 
 **Good luck! 🎓🚀**
+
+---
+
+## 🧭 Navigation
+
+**[🚀 Ready to Start? Go to START_HERE](START_HERE.md)** | **[📚 View Learning Path](LEARNING_PATH.md)** | **[🏠 Back to README](README.md)**

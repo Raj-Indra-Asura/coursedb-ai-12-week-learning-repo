@@ -1,5 +1,11 @@
 # Week 10: Semantic Search & Vector Databases - Reflection Prompts
 
+## 🧭 Navigation
+
+**[← Back to Week 10 Overview](README.md)** | **[Next: Week 11 →](../week_11_frontend_integration/README.md)**
+
+---
+
 ## 📝 Purpose
 
 Deep reflection on semantic search concepts to build lasting understanding.
@@ -155,3 +161,9 @@ _________________________________________________________________
 ---
 
 **Remember:** Semantic search is revolutionizing how we find information. Understanding embeddings and vector databases opens doors to modern AI applications!
+
+---
+
+## 🧭 Navigation
+
+**[← Back to Week 10 Overview](README.md)** | **[🎉 Start Week 11 →](../week_11_frontend_integration/README.md)**
