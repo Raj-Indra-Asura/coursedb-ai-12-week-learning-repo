@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Import API routers
-from app.api import health, courses, topics, questions, resources, analytics, search
+from app.api import health, courses, topics, questions, resources, analytics, search, learning
 
 # Import database initialization
 from app.db.database import init_db
@@ -109,6 +109,7 @@ app.include_router(questions.router)
 app.include_router(resources.router)
 app.include_router(analytics.router)
 app.include_router(search.router)
+app.include_router(learning.router)
 
 
 # Root endpoint
